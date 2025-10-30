@@ -29,7 +29,10 @@ jobs:
 
       - name: Extract branch name
         id: branch
-        run: echo "name=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+        run: |
+          RAW_NAME=${GITHUB_REF_NAME}
+          SAFE_NAME=$(echo "$RAW_NAME" | tr '/' '-' | tr -cd '[:alnum:]._-')
+          echo "name=$SAFE_NAME" >> $GITHUB_OUTPUT
 
       - name: Build Docker image
         run: |
