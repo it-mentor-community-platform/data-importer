@@ -26,6 +26,7 @@ jobs:
         with:
           workload_identity_provider: "projects/271095235132/locations/global/workloadIdentityPools/github-pool/providers/github"
           service_account: "data-importer-214@hover-344613.iam.gserviceaccount.com"
+          audience: "https://iam.googleapis.com/projects/271095235132/locations/global/workloadIdentityPools/github-pool/providers/github"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
