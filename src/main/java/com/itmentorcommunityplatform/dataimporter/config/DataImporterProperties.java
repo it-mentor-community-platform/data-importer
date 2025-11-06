@@ -12,6 +12,5 @@ import java.util.List;
 public class DataImporterProperties {
     private String spreadsheetId;
     private String sheetRange;
-    private String credentialsPath;
     private List<Long> adminIds;
 }

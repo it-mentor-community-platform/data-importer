@@ -3,6 +3,7 @@ package com.itmentorcommunityplatform.dataimporter.service;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.UserImportDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
+import com.itmentorcommunityplatform.dataimporter.model.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,8 @@ public class UserImportService {
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties props;
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r);
-        t.setName("users-import-thread");
-        return t;
-    });
+    private final ExecutorService executor =
+            Executors.newSingleThreadExecutor(r -> new Thread(r, "user-import-thread"));
 
     public void startImportAsync() {
         executor.submit(this::doImport);
@@ -58,8 +56,10 @@ public class UserImportService {
                     log.warn("Invalid telegram id '{}' at row index {}, skipping.", tgRaw, i);
                     continue;
                 }
-                String role = (props.getAdminIds() != null && props.getAdminIds().contains(tgId)) ? "ADMIN" : "STUDENT";
-                UserImportDto dto = new UserImportDto(tgId, role);
+                UserRole role = (props.getAdminIds() != null && props.getAdminIds().contains(tgId))
+                        ? UserRole.ADMIN
+                        : UserRole.STUDENT;
+                UserImportDto dto = new UserImportDto(tgId, role.name());
                 log.info("Imported user: telegramId={}, role={}", dto.getTelegramId(), dto.getRole());
                 processed++;
             }

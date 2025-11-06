@@ -11,8 +11,6 @@ import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 
@@ -37,16 +35,13 @@ public class GoogleSheetsClient {
     }
 
     private Sheets getSheetsService() throws Exception {
-        String credentialsPath = props.getCredentialsPath();
-        try (InputStream in = new FileInputStream(credentialsPath)) {
-            GoogleCredentials credentials = GoogleCredentials.fromStream(in)
-                    .createScoped(Collections.singletonList("https://www.googleapis.com/auth/spreadsheets.readonly"));
-            return new Sheets.Builder(
+        GoogleCredentials credentials = GoogleCredentials.getApplicationDefault()
+                .createScoped(Collections.singletonList("https://www.googleapis.com/auth/spreadsheets.readonly"));
+        return new Sheets.Builder(
                     GoogleNetHttpTransport.newTrustedTransport(),
                     JSON_FACTORY,
                     new HttpCredentialsAdapter(credentials))
                     .setApplicationName("data-importer")
                     .build();
-        }
     }
 }
