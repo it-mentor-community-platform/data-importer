@@ -38,9 +38,11 @@
 2. Аутентификация
 
    - **Клонируйте репозиторий**.
-   - **Выполните команду аутентификации в терминале Google Cloud SDK Shell `gcloud`:**
+   - **Выполните команды аутентификации в терминале Google Cloud SDK Shell `gcloud`:**
    ```bash
-     gcloud auth application-default login --scopes=https://www.googleapis.com/auth/spreadsheets.readonly,https://www.googleapis.com/auth/cloud-platform
+      gcloud auth application-default login --scopes=https://www.googleapis.com/auth/spreadsheets.readonly,https://www.googleapis.com/auth/cloud-platform
+      gcloud auth application-default set-quota-project hover-344613
+      gcloud config set project hover-344613
     ```
    - **Войдите в свой Google-аккаунт** и подтвердите разрешения.
 
