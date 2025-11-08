@@ -10,3 +10,8 @@ dataimporter:
     spreadsheet-id: "1Ya7J-nsc2m4D9MuiDbauypL7yWocHGoJj9P7tVimxp8"
     sheet-range: "Telegram аккаунты студентов!B2:B"
     admin-ids: []
+
+management:
+    endpoint:
+        health:
+            show-details: always
