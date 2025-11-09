@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: data-importer
+logging:
+    level:
+      root: INFO
+
+management:
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  endpoints:
+    web:
+      exposure:
+        include: "health,prometheus,info"
+  endpoint:
+    prometheus:
+      access: unrestricted
+    health:
+      show-details: when_authorized
