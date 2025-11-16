@@ -4,16 +4,20 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
@@ -25,9 +29,14 @@ import java.util.List;
 public class GoogleSheetsClient {
 
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-    private static final String SCOPE_SHEETS_READONLY = "https://www.googleapis.com/auth/spreadsheets.readonly";
 
     private final DataImporterProperties props;
+
+    @Value("${google.credentials.path:}")
+    private String credentialsPath;
+
+    @Value("${google.credentials.json:}")
+    private String credentialsJson;
 
     private Sheets sheetsService;
 
@@ -35,11 +44,14 @@ public class GoogleSheetsClient {
     public void init() {
         try {
             GoogleCredentials credentials = loadCredentials();
-            credentials = credentials.createScoped(Collections.singletonList(SCOPE_SHEETS_READONLY));
+            credentials = credentials.createScoped(
+                    Collections.singletonList(SheetsScopes.SPREADSHEETS_READONLY)
+            );
             sheetsService = new Sheets.Builder(
                     GoogleNetHttpTransport.newTrustedTransport(),
                     JSON_FACTORY,
-                    new HttpCredentialsAdapter(credentials))
+                    new HttpCredentialsAdapter(credentials)
+            )
                     .setApplicationName("data-importer")
                     .build();
             log.info("Google Sheets client initialized successfully");
@@ -61,22 +73,20 @@ public class GoogleSheetsClient {
     }
 
     private GoogleCredentials loadCredentials() throws IOException {
-        String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
-        if (credentialsPath != null && !credentialsPath.isBlank()) {
+        if (!credentialsPath.isBlank()) {
             log.info("Loading Google credentials from file: {}", credentialsPath);
             try (FileInputStream in = new FileInputStream(credentialsPath)) {
                 return GoogleCredentials.fromStream(in);
             }
         }
-
-        String credentialsJson = System.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON");
-        if (credentialsJson != null && !credentialsJson.isBlank()) {
-            log.info("Loading Google credentials from environment variable");
+        if (!credentialsJson.isBlank()) {
+            log.info("Loading Google credentials from JSON config property");
             return GoogleCredentials.fromStream(
                     new ByteArrayInputStream(credentialsJson.getBytes(StandardCharsets.UTF_8))
             );
         }
         throw new IllegalStateException(
-                "Neither GOOGLE_APPLICATION_CREDENTIALS nor GOOGLE_APPLICATION_CREDENTIALS_JSON is set");
+                "Google credentials not configured: neither google.credentials.path nor google.credentials.json is set"
+        );
     }
 }

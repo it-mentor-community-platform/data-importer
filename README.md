@@ -19,11 +19,10 @@
 
    
 ### Локальный запуск и тестирование
-1. Для сервиса Data Importer необходим файл credentials.json 
+1. Для сервиса Data Importer необходим файл credentials.json(запроси его у тимлида) 
    - Скопируй его в src/main/resources
    - В корне проекта создай файл .env:
    ```env
-   SPRING_PROFILES_ACTIVE=ide
    GOOGLE_APPLICATION_CREDENTIALS=src/main/resources/credentials.json
    ```
    

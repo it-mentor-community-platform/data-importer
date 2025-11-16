@@ -18,3 +18,8 @@ management:
       access: unrestricted
     health:
       show-details: when_authorized
+
+google:
+  credentials:
+    path: ${GOOGLE_APPLICATION_CREDENTIALS:}
+    json: ${GOOGLE_APPLICATION_CREDENTIALS_JSON:}
