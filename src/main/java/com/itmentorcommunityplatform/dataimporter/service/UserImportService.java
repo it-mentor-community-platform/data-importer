@@ -1,7 +1,9 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
+import com.itmentorcommunityplatform.dataimporter.auth.AuthServiceClient;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.UserImportDto;
+import com.itmentorcommunityplatform.dataimporter.dto.UserUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.metrics.ImportMetrics;
 import com.itmentorcommunityplatform.dataimporter.model.UserRole;
@@ -22,6 +24,7 @@ public class UserImportService {
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties props;
     private final ImportMetrics importMetrics;
+    private final AuthServiceClient authServiceClient;
 
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "user-import-thread"));
@@ -67,9 +70,18 @@ public class UserImportService {
                         ? UserRole.ADMIN
                         : UserRole.STUDENT;
                 UserImportDto dto = new UserImportDto(tgId, role.name());
-                log.info("Imported user: telegramId={}, role={}", dto.getTelegramId(), dto.getRole());
-                importMetrics.getImportSuccessCounter().increment();
-                processed++;
+                UserUpsertRequestDto userUpsertRequestDto = new UserUpsertRequestDto(
+                        dto.getTelegramId(),
+                        List.of(dto.getRole())
+                );
+                try {
+                    authServiceClient.upsertUser(userUpsertRequestDto);
+                    importMetrics.getImportSuccessCounter().increment();
+                    processed++;
+                    log.info("Imported user: telegramId={}, role={}", dto.getTelegramId(), dto.getRole());
+                } catch (Exception ex) {
+                    importMetrics.getImportErrorCounter().increment();
+                }
             }
             log.info("Users import finished. Total processed users: {}", processed);
 
