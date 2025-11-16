@@ -4,7 +4,7 @@ spring:
       on-profile: local-stack
 
 server:
-  port: 8082
+  port: 8080
 
 dataimporter:
   spreadsheet-id: "1Ya7J-nsc2m4D9MuiDbauypL7yWocHGoJj9P7tVimxp8"
