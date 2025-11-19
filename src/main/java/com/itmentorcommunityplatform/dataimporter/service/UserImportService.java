@@ -2,7 +2,6 @@ package com.itmentorcommunityplatform.dataimporter.service;
 
 import com.itmentorcommunityplatform.dataimporter.auth.AuthServiceClient;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
-import com.itmentorcommunityplatform.dataimporter.dto.UserImportDto;
 import com.itmentorcommunityplatform.dataimporter.dto.UserUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.metrics.ImportMetrics;
@@ -66,21 +65,22 @@ public class UserImportService {
                     importMetrics.getImportErrorCounter().increment();
                     continue;
                 }
-                UserRole role = (props.getAdminIds() != null && props.getAdminIds().contains(tgId))
-                        ? UserRole.ADMIN
-                        : UserRole.STUDENT;
-                UserImportDto dto = new UserImportDto(tgId, role.name());
-                UserUpsertRequestDto userUpsertRequestDto = new UserUpsertRequestDto(
-                        dto.getTelegramId(),
-                        List.of(dto.getRole())
+                boolean isAdmin = props.getAdminIds() != null && props.getAdminIds().contains(tgId);
+                List<String> rolesToSend = isAdmin
+                        ? List.of(UserRole.ADMIN.name(), UserRole.STUDENT.name())
+                        : List.of(UserRole.STUDENT.name());
+                UserUpsertRequestDto req = new UserUpsertRequestDto(
+                        tgId,
+                        rolesToSend
                 );
                 try {
-                    authServiceClient.upsertUser(userUpsertRequestDto);
+                    authServiceClient.upsertUser(req);
                     importMetrics.getImportSuccessCounter().increment();
                     processed++;
-                    log.info("Imported user: telegramId={}, role={}", dto.getTelegramId(), dto.getRole());
+                    log.info("Imported user: telegramId={}, roles={}", tgId, rolesToSend);
                 } catch (Exception ex) {
                     importMetrics.getImportErrorCounter().increment();
+                    log.error("Failed to import user telegramId={}", tgId, ex);
                 }
             }
             log.info("Users import finished. Total processed users: {}", processed);
