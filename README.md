@@ -40,3 +40,8 @@
 3. Тестирование
 
    - Запустить тесты из `user-import-test.http`
+
+
+4. Swagger документация 
+
+   - ```http://localhost:8082/swagger-ui.html```
