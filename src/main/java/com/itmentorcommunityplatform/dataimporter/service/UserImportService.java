@@ -11,7 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -45,6 +47,7 @@ public class UserImportService {
                 log.info("Sheet returned empty result.");
                 return;
             }
+            Set<Long> uniqueIds = new HashSet<>();
             int processed = 0;
             for (int i = 0; i < rows.size(); i++) {
                 List<Object> row = rows.get(i);
@@ -65,14 +68,14 @@ public class UserImportService {
                     importMetrics.getImportErrorCounter().increment();
                     continue;
                 }
+                if (uniqueIds.add(tgId)) {
+                    importMetrics.getImportUniqueUsersCounter().increment();
+                }
                 boolean isAdmin = props.getAdminIds() != null && props.getAdminIds().contains(tgId);
                 List<String> rolesToSend = isAdmin
                         ? List.of(UserRole.ADMIN.name(), UserRole.STUDENT.name())
                         : List.of(UserRole.STUDENT.name());
-                UserUpsertRequestDto req = new UserUpsertRequestDto(
-                        tgId,
-                        rolesToSend
-                );
+                UserUpsertRequestDto req = new UserUpsertRequestDto(tgId, rolesToSend);
                 try {
                     authServiceClient.upsertUser(req);
                     importMetrics.getImportSuccessCounter().increment();
@@ -84,6 +87,7 @@ public class UserImportService {
                 }
             }
             log.info("Users import finished. Total processed users: {}", processed);
+            log.info("Unique telegram_user_id count: {}", uniqueIds.size());
 
         } catch (Exception e) {
             log.error("Failed to import users", e);
