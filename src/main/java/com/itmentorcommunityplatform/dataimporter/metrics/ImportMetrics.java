@@ -13,15 +13,10 @@ public class ImportMetrics {
     private final Counter importSuccessCounter;
     private final Counter importErrorCounter;
     private final Timer importDurationTimer;
-    private final Counter importUniqueUsersCounter;
 
     public ImportMetrics(MeterRegistry meterRegistry) {
         this.importSuccessCounter = Counter.builder("data_importer_users_success_total")
-                .description("Total successfully imported users (including updates)")
-                .register(meterRegistry);
-
-        this.importUniqueUsersCounter = Counter.builder("data_importer_users_unique_total")
-                .description("Total unique telegram_user_id processed during import")
+                .description("Total successfully imported users")
                 .register(meterRegistry);
 
         this.importErrorCounter = Counter.builder("data_importer_users_error_total")
