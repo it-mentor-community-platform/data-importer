@@ -1,10 +1,9 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
-import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileUpsertResponseDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
-import com.itmentorcommunityplatform.dataimporter.metrics.ImportMetrics;
-import com.itmentorcommunityplatform.dataimporter.model.UserRole;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,8 +20,10 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class ProfileImportService {
     private final GoogleSheetsClient googleSheetsClient;
-    private final DataImporterProperties props;
-    private final ImportMetrics importMetrics;
+
+    private final Counter profilesImportSuccessCounter;
+    private final Counter profilesImportErrorCounter;
+    private final Timer profilesImportDurationTimer;
 
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "profile-import-thread"));
@@ -32,7 +33,7 @@ public class ProfileImportService {
     }
 
     private void doImportMeasured() {
-        importMetrics.getImportDurationTimer().record(this::doImport);
+        profilesImportDurationTimer.record(this::doImport);
     }
 
     private void doImport() {
@@ -46,7 +47,6 @@ public class ProfileImportService {
 
             Set<String> processedGitHubLinks = new HashSet<>();
             Set<String> processedTelegramUsernames = new HashSet<>();
-            Set<Long> processedTelegramIds = new HashSet<>();
             int processed = 0;
             int skippedDuplicates = 0;
 
@@ -57,42 +57,28 @@ public class ProfileImportService {
                     continue;
                 }
 
-                String tgIdRaw = row.size() > 1 ? String.valueOf(row.get(1)).trim() : "";
-                Long tgId = null;
-                if (!tgIdRaw.isEmpty()) {
-                    try {
-                        tgId = Long.parseLong(tgIdRaw);
-                    } catch (NumberFormatException ex) {
-                        log.warn("Invalid telegram ID '{}' at row index {}, skipping.", tgIdRaw, i);
-                        importMetrics.getImportErrorCounter().increment();
-                        continue;
-                    }
-                }
+                String githubLink = String.valueOf(row.get(0)).trim();
+                String telegramUsername = row.size() > 2 ? String.valueOf(row.get(2)).trim() : "";
 
-                String githubLink = row.size() > 0 ? String.valueOf(row.get(0)).trim() : "";
-                if (githubLink.isEmpty() && tgIdRaw.isEmpty()) {
-                    log.warn("Skipping row with no GitHub link or Telegram ID at index {}", i);
+                if (githubLink.isEmpty() && telegramUsername.isEmpty()) {
+                    log.warn("Skipping row with no GitHub link or Telegram Username at index {}", i);
                     continue;
                 }
 
-                String telegramUsername = row.size() > 2 ? String.valueOf(row.get(2)).trim() : "";
                 String formattedTelegramUsernameLink = telegramUsername.isEmpty() ? null
                         : String.format("https://t.me/%s", telegramUsername.replaceFirst("^@", ""));
 
-
-                boolean duplicate = (tgId != null && !processedTelegramIds.add(tgId)) ||
-                                    (!githubLink.isEmpty() && !processedGitHubLinks.add(githubLink)) ||
-                                    (!telegramUsername.isEmpty() && !processedTelegramUsernames.add(telegramUsername));
+                boolean duplicate = isDuplicateEntry(
+                        githubLink,
+                        telegramUsername,
+                        processedGitHubLinks,
+                        processedTelegramUsernames
+                );
                 if (duplicate) {
                     log.debug("Skipping duplicate entry at row index {}", i);
                     skippedDuplicates++;
                     continue;
                 }
-
-
-                boolean isAdmin = tgId != null && props.getAdminIds() != null && props.getAdminIds().contains(tgId);
-                List<String> rolesToSend = isAdmin ? List.of(UserRole.ADMIN.name(), UserRole.STUDENT.name())
-                        : List.of(UserRole.STUDENT.name());
 
                 // DTO для отправки в сервис
                 ProfileUpsertResponseDto req = new ProfileUpsertResponseDto(formattedTelegramUsernameLink, githubLink);
@@ -101,20 +87,20 @@ public class ProfileImportService {
                     // Тут вызываем метод интеграции с Auth Service
                     // authServiceClient.upsertProfile(req);
 
-                    importMetrics.getImportSuccessCounter().increment();
+                    profilesImportSuccessCounter.increment();
                     processed++;
-                    log.info("Imported profile: tgId={}, githubLink={}, telegramUsername={}, roles={}",
-                            tgId, githubLink, formattedTelegramUsernameLink, rolesToSend);
+                    log.info("Imported profile: githubLink={}, telegramUsername={}",
+                            githubLink, formattedTelegramUsernameLink);
                 } catch (Exception ex) {
-                    importMetrics.getImportErrorCounter().increment();
-                    log.error("Failed to import profile at row index {}: tgId={}, githubLink={}, telegramUsername={}",
-                            i, tgId, githubLink, formattedTelegramUsernameLink, ex);
+                    profilesImportErrorCounter.increment();
+                    log.error("Failed to import profile at row index {}: githubLink={}, telegramUsername={}",
+                            i, githubLink, formattedTelegramUsernameLink, ex);
                 }
             }
             log.info("Profile import finished. Total processed: {}. Skipped duplicates: {}", processed, skippedDuplicates);
         } catch (Exception e) {
             log.error("Failed to import profiles", e);
-            importMetrics.getImportErrorCounter().increment();
+            profilesImportErrorCounter.increment();
         }
     }
 
@@ -122,4 +108,17 @@ public class ProfileImportService {
     public void shutdown() {
         executor.shutdownNow();
     }
+
+    private boolean isDuplicateEntry(
+            String githubLink,
+            String telegramUsername,
+            Set<String> processedGithubs,
+            Set<String> processedUsernames
+    ) {
+        boolean githubDuplicate = githubLink != null && !githubLink.isEmpty() && !processedGithubs.add(githubLink);
+        boolean usernameDuplicate = telegramUsername != null && !telegramUsername.isEmpty() && !processedUsernames.add(telegramUsername);
+
+        return githubDuplicate || usernameDuplicate;
+    }
+
 }
