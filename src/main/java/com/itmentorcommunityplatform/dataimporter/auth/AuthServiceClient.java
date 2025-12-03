@@ -1,7 +1,7 @@
 package com.itmentorcommunityplatform.dataimporter.auth;
 
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
-import com.itmentorcommunityplatform.dataimporter.dto.UserUpsertRequestDto;
+import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
