@@ -2,7 +2,7 @@ package com.itmentorcommunityplatform.dataimporter.service;
 
 import com.itmentorcommunityplatform.dataimporter.auth.AuthServiceClient;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
-import com.itmentorcommunityplatform.dataimporter.dto.UserUpsertRequestDto;
+import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.metrics.ImportMetrics;
 import com.itmentorcommunityplatform.dataimporter.model.UserRole;
@@ -55,7 +55,7 @@ public class UserImportService {
                     log.warn("Skipping empty row at index {}", i);
                     continue;
                 }
-                String tgRaw = String.valueOf(row.getFirst()).trim();
+                String tgRaw = row.size() > 1 ? String.valueOf(row.get(1)).trim() : "";
                 if (tgRaw.isEmpty()) {
                     log.warn("Skipping row with empty telegram id at index {}", i);
                     continue;
