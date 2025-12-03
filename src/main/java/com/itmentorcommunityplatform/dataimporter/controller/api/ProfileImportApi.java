@@ -14,12 +14,20 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
-@Tag(name = "User Import", description = "API for managing user imports")
-public interface UserImportApi {
+@Tag(name = "Profile Import", description = "API for managing profile imports")
+public interface ProfileImportApi {
 
     @Operation(
-            summary = "Starting user import",
-            description = "Asynchronously starts the process of reading the Google Spreadsheet and creating/updating users in the Auth Service."
+            summary = "Starting profiles import",
+            description = "Asynchronously starts reading the Google Spreadsheet and creating/updating profiles. Requires ADMIN role.",
+            parameters = {
+                    @Parameter(
+                            name = "X-User-Roles",
+                            description = "Comma-separated list of user roles. Must include ADMIN.",
+                            required = true,
+                            in = ParameterIn.HEADER
+                    )
+            }
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -32,7 +40,7 @@ public interface UserImportApi {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Access is denied (there is no ADMIN role)",
+                    description = "Access denied: missing X-User-Roles header or ADMIN role",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class)
@@ -47,7 +55,7 @@ public interface UserImportApi {
                     )
             )
     })
-    ResponseEntity<?> startUsersImport(
+    ResponseEntity<?> startProfileImport(
             @Parameter(
                     name = "X-User-Roles",
                     in = ParameterIn.HEADER,
