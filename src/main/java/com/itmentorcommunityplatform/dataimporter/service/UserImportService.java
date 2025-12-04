@@ -2,10 +2,11 @@ package com.itmentorcommunityplatform.dataimporter.service;
 
 import com.itmentorcommunityplatform.dataimporter.auth.AuthServiceClient;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
-import com.itmentorcommunityplatform.dataimporter.dto.UserUpsertRequestDto;
+import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
-import com.itmentorcommunityplatform.dataimporter.metrics.ImportMetrics;
 import com.itmentorcommunityplatform.dataimporter.model.UserRole;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,8 +25,11 @@ public class UserImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties props;
-    private final ImportMetrics importMetrics;
     private final AuthServiceClient authServiceClient;
+
+    private final Counter usersImportSuccessCounter;
+    private final Counter usersImportErrorCounter;
+    private final Timer usersImportDurationTimer;
 
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "user-import-thread"));
@@ -35,7 +39,7 @@ public class UserImportService {
     }
 
     private void doImportMeasured() {
-        importMetrics.getImportDurationTimer().record(this::doImport);
+        usersImportDurationTimer.record(this::doImport);
     }
 
     private void doImport() {
@@ -46,7 +50,7 @@ public class UserImportService {
                 log.info("Sheet returned empty result.");
                 return;
             }
-           Set<Long> processedTelegramIds = new HashSet<>();
+            Set<Long> processedTelegramIds = new HashSet<>();
             int processed = 0;
             int skippedDuplicates = 0;
             for (int i = 0; i < rows.size(); i++) {
@@ -55,7 +59,7 @@ public class UserImportService {
                     log.warn("Skipping empty row at index {}", i);
                     continue;
                 }
-                String tgRaw = String.valueOf(row.getFirst()).trim();
+                String tgRaw = row.size() > 1 ? String.valueOf(row.get(1)).trim() : "";
                 if (tgRaw.isEmpty()) {
                     log.warn("Skipping row with empty telegram id at index {}", i);
                     continue;
@@ -65,7 +69,7 @@ public class UserImportService {
                     tgId = Long.parseLong(tgRaw);
                 } catch (NumberFormatException ex) {
                     log.warn("Invalid telegram id '{}' at row index {}, skipping.", tgRaw, i);
-                    importMetrics.getImportErrorCounter().increment();
+                    usersImportErrorCounter.increment();
                     continue;
                 }
                 if (!processedTelegramIds.add(tgId)) {
@@ -80,18 +84,18 @@ public class UserImportService {
                 UserUpsertRequestDto req = new UserUpsertRequestDto(tgId, rolesToSend);
                 try {
                     authServiceClient.upsertUser(req);
-                    importMetrics.getImportSuccessCounter().increment();
+                    usersImportSuccessCounter.increment();
                     processed++;
                     log.info("Imported user: telegramId={}, roles={}", tgId, rolesToSend);
                 } catch (Exception ex) {
-                    importMetrics.getImportErrorCounter().increment();
+                    usersImportErrorCounter.increment();
                     log.error("Failed to import user telegramId={}", tgId, ex);
                 }
             }
             log.info("Users import finished. Total processed users: {}. Skipped duplicates: {}", processed, skippedDuplicates);
         } catch (Exception e) {
             log.error("Failed to import users", e);
-            importMetrics.getImportErrorCounter().increment();
+            usersImportErrorCounter.increment();
         }
     }
 

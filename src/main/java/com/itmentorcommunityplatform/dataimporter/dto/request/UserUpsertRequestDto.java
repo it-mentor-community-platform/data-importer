@@ -1,4 +1,4 @@
-package com.itmentorcommunityplatform.dataimporter.dto;
+package com.itmentorcommunityplatform.dataimporter.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
