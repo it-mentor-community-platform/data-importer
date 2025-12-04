@@ -89,7 +89,7 @@ public class ProfileImportService {
 
                     profilesImportSuccessCounter.increment();
                     processed++;
-                    log.info("Imported profile: githubLink={}, telegramUsername={}",
+                    log.info("Imported profile: githubLink={}, telegramUsernameLink={}",
                             githubLink, formattedTelegramUsernameLink);
                 } catch (Exception ex) {
                     profilesImportErrorCounter.increment();
