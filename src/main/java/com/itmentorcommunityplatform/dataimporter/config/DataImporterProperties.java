@@ -14,4 +14,5 @@ public class DataImporterProperties {
     private String sheetRange;
     private List<Long> adminIds;
     private String authServiceBaseUrl;
+    private String profileServiceBaseUrl;
 }
