@@ -1,7 +1,8 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
-import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileUpsertResponseDto;
+import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.InterServiceHttpClient;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class ProfileImportService {
     private final GoogleSheetsClient googleSheetsClient;
+    private final InterServiceHttpClient httpClient;
 
     private final Counter profilesImportSuccessCounter;
     private final Counter profilesImportErrorCounter;
@@ -57,6 +59,18 @@ public class ProfileImportService {
                     continue;
                 }
 
+                String tgIdRaw = row.size() > 1 ? String.valueOf(row.get(1)).trim() : "";
+                Long tgId = null;
+                if (!tgIdRaw.isEmpty()) {
+                    try {
+                        tgId = Long.parseLong(tgIdRaw);
+                    } catch (NumberFormatException ex) {
+                        log.warn("Invalid telegram ID '{}' at row index {}, skipping.", tgIdRaw, i);
+                        profilesImportErrorCounter.increment();
+                        continue;
+                    }
+                }
+
                 String githubLink = String.valueOf(row.get(0)).trim();
                 String telegramUsername = row.size() > 2 ? String.valueOf(row.get(2)).trim() : "";
 
@@ -80,13 +94,15 @@ public class ProfileImportService {
                     continue;
                 }
 
-                // DTO для отправки в сервис
-                ProfileUpsertResponseDto req = new ProfileUpsertResponseDto(formattedTelegramUsernameLink, githubLink);
+                var requestDto = new ProfileUpsertRequestDto(
+                        tgId,
+                        new ProfileUpsertRequestDto.DetailsDto(
+                                formattedTelegramUsernameLink,
+                                githubLink)
+                );
 
                 try {
-                    // Тут вызываем метод интеграции с Auth Service
-                    // authServiceClient.upsertProfile(req);
-
+                    httpClient.upsertProfile(requestDto);
                     profilesImportSuccessCounter.increment();
                     processed++;
                     log.info("Imported profile: githubLink={}, telegramUsernameLink={}",
