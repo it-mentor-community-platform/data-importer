@@ -1,9 +1,9 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
-import com.itmentorcommunityplatform.dataimporter.auth.AuthServiceClient;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.InterServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.model.UserRole;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
@@ -25,7 +25,7 @@ public class UserImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties props;
-    private final AuthServiceClient authServiceClient;
+    private final InterServiceHttpClient httpClient;
 
     private final Counter usersImportSuccessCounter;
     private final Counter usersImportErrorCounter;
@@ -83,7 +83,7 @@ public class UserImportService {
                         : List.of(UserRole.STUDENT.name());
                 UserUpsertRequestDto req = new UserUpsertRequestDto(tgId, rolesToSend);
                 try {
-                    authServiceClient.upsertUser(req);
+                    httpClient.upsertUser(req);
                     usersImportSuccessCounter.increment();
                     processed++;
                     log.info("Imported user: telegramId={}, roles={}", tgId, rolesToSend);
