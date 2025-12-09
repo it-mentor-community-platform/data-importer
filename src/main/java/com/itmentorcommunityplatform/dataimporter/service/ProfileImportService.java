@@ -1,8 +1,9 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
+import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
-import com.itmentorcommunityplatform.dataimporter.httpclient.InterServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,8 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class ProfileImportService {
     private final GoogleSheetsClient googleSheetsClient;
-    private final InterServiceHttpClient httpClient;
+    private final ServiceHttpClient httpClient;
+    private final DataImporterProperties properties;
 
     private final Counter profilesImportSuccessCounter;
     private final Counter profilesImportErrorCounter;
@@ -41,7 +43,7 @@ public class ProfileImportService {
     private void doImport() {
         log.info("Starting profile import (async)...");
         try {
-            List<List<Object>> rows = googleSheetsClient.readSheet();
+            List<List<Object>> rows = googleSheetsClient.readSheet(properties.getSheetRangeTelegramAccounts());
             if (rows.isEmpty()) {
                 log.info("Sheet returned empty result.");
                 return;
