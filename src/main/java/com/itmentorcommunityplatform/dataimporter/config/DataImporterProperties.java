@@ -11,7 +11,8 @@ import java.util.List;
 @Data
 public class DataImporterProperties {
     private String spreadsheetId;
-    private String sheetRange;
+    private String sheetRangeTelegramAccounts;
+    private String sheetRangeProjects;
     private List<Long> adminIds;
     private String authServiceBaseUrl;
     private String profileServiceBaseUrl;

@@ -36,9 +36,6 @@ public class ProjectImportService {
             "август", "сентябрь", "октябрь", "ноябрь", "декабрь"
     };
 
-    private static final ThreadLocal<SimpleDateFormat> RUS_FORMATTER =
-            ThreadLocal.withInitial(() -> new SimpleDateFormat("MMMM, yyyy", Locale.forLanguageTag("ru")));
-
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "project-import-thread"));
 
