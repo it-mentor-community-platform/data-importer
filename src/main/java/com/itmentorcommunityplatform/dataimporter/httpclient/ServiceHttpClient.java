@@ -72,9 +72,7 @@ public class ServiceHttpClient {
         String url = props.getProfileServiceBaseUrl() + "/api/profile/internal/profile/by-github-profile-url";
         try {
             ProfileByGithubResponseDto response = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .queryParam("url", githubProfileUrl)
-                            .build())
+                    .uri(url + "?url=" + githubProfileUrl)
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .retrieve()
                     .bodyToMono(ProfileByGithubResponseDto.class)
@@ -86,7 +84,7 @@ public class ServiceHttpClient {
         } catch (WebClientResponseException wcre) {
             log.error("Profile Service returned error. status={}, body={}, githubUrl={}",
                     wcre.getStatusCode().value(), wcre.getResponseBodyAsString(), githubProfileUrl);
-            return null; // или throw, в зависимости от логики
+            throw wcre;
         } catch (Exception ex) {
             log.error("Failed to fetch profile for githubUrl={}, error={}",
                     githubProfileUrl, ex.getMessage(), ex);
