@@ -12,7 +12,9 @@ dataimporter:
     admin-ids: []
     auth-service-base-url: "http://localhost:8081"
     profile-service-base-url: "http://localhost:8083"
-    project-service-base-url: "http//localhost:8084"
+
+server:
+    port: 8082
 
 management:
     endpoint:

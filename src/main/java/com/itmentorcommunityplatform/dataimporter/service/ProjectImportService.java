@@ -1,10 +1,7 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
-import com.itmentorcommunityplatform.dataimporter.dto.request.ProjectUpsertRequestDto;
-import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
-import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +23,6 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class ProjectImportService {
     private final GoogleSheetsClient googleSheetsClient;
-    private final ServiceHttpClient httpClient;
     private final DataImporterProperties properties;
 
     private final Counter projectImportSuccessCounter;
@@ -39,6 +35,9 @@ public class ProjectImportService {
             "январь", "февраль", "март", "апрель", "май", "июнь", "июль",
             "август", "сентябрь", "октябрь", "ноябрь", "декабрь"
     };
+
+    private static final ThreadLocal<SimpleDateFormat> RUS_FORMATTER =
+            ThreadLocal.withInitial(() -> new SimpleDateFormat("MMMM, yyyy", Locale.forLanguageTag("ru")));
 
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "project-import-thread"));
@@ -72,10 +71,10 @@ public class ProjectImportService {
                 }
 
                 String addedTimestamp = String.valueOf(row.get(0)).trim();
-                String roadmapProject = String.valueOf(row.get(1)).trim();
-                String programmingLanguage = String.valueOf(row.get(2)).trim();
-                String githubRepositoryLink = String.valueOf(row.get(4)).trim();
-                String githubProfileLink = String.valueOf(row.get(6)).trim();
+                String roadmapProject = row.size() > 1 ? String.valueOf(row.get(1)).trim() : "";
+                String programmingLanguage = row.size() > 2 ? String.valueOf(row.get(2)).trim() : "";
+                String githubRepositoryLink = row.size() > 4 ? String.valueOf(row.get(4)).trim() : "";
+                String githubProfileLink = row.size() > 6 ? String.valueOf(row.get(6)).trim() : "";
 
                 if (githubRepositoryLink.isEmpty() && githubProfileLink.isEmpty()) {
                     log.warn("Skipping row with no GitHub repository or profile link at index {}", i);
@@ -88,31 +87,12 @@ public class ProjectImportService {
                     continue;
                 }
 
-                ProfileByGithubResponseDto profile = httpClient
-                        .getProfileByGithubUrl(githubProfileLink);
-
-                if (profile == null || profile.telegramUserId() == null) {
-                    log.warn("Profile not found or invalid Telegram User ID for GitHub URL: {} at row {}",
-                            githubProfileLink, i);
-                    continue;
-                }
-
-
-                var requestDto = new ProjectUpsertRequestDto(
-                        profile.telegramUserId(),
-                        githubRepositoryLink,
-                        programmingLanguage,
-                        roadmapProject,
-                        parseTimestamp(addedTimestamp),
-                        PROJECT_SOURCE_TYPE
-                );
-
                 try {
                     //  httpClient.upsertProject(requestDto);
                     processedProjects.add(githubRepositoryLink);
                     projectImportSuccessCounter.increment();
                     processed++;
-                    log.info("Imported project: repo={}, profile={}, roadmap={}",
+                    log.info("Imported project: GitHubRepo={}, GitHubProfile={}, Roadmap project={}",
                             githubRepositoryLink, githubProfileLink, roadmapProject);
                 } catch (Exception ex) {
                     projectImportErrorCounter.increment();
@@ -133,11 +113,11 @@ public class ProjectImportService {
         if (dateStr.isEmpty()) return null;
 
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat("MMMM, yyyy", new Locale("ru"));
+            SimpleDateFormat sdf = new SimpleDateFormat("MMMM, yyyy", Locale.forLanguageTag("ru"));
             sdf.setDateFormatSymbols(new java.text.DateFormatSymbols() {{
                 setMonths(RU_MONTHS);
             }});
-            Date date = sdf.parse(dateStr.toLowerCase()); // lower-case для надёжности
+            Date date = sdf.parse(dateStr.toLowerCase());
             return date.getTime();
         } catch (Exception e) {
             log.warn("Failed to parse date '{}': {}", dateStr, e.getMessage());
