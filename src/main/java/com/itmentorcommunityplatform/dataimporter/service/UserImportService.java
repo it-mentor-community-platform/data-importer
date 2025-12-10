@@ -3,7 +3,7 @@ package com.itmentorcommunityplatform.dataimporter.service;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
-import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.InterServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.model.UserRole;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
@@ -24,8 +24,8 @@ import java.util.concurrent.Executors;
 public class UserImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
-    private final DataImporterProperties properties;
-    private final ServiceHttpClient httpClient;
+    private final DataImporterProperties props;
+    private final InterServiceHttpClient httpClient;
 
     private final Counter usersImportSuccessCounter;
     private final Counter usersImportErrorCounter;
@@ -45,7 +45,7 @@ public class UserImportService {
     private void doImport() {
         log.info("Starting users import (async)...");
         try {
-            List<List<Object>> rows = googleSheetsClient.readSheet(properties.getSheetRangeTelegramAccounts());
+            List<List<Object>> rows = googleSheetsClient.readSheet();
             if (rows.isEmpty()) {
                 log.info("Sheet returned empty result.");
                 return;
@@ -77,7 +77,7 @@ public class UserImportService {
                     skippedDuplicates++;
                     continue;
                 }
-                boolean isAdmin = properties.getAdminIds() != null && properties.getAdminIds().contains(tgId);
+                boolean isAdmin = props.getAdminIds() != null && props.getAdminIds().contains(tgId);
                 List<String> rolesToSend = isAdmin
                         ? List.of(UserRole.ADMIN.name(), UserRole.STUDENT.name())
                         : List.of(UserRole.STUDENT.name());

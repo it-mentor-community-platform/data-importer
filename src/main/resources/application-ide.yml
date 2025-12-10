@@ -3,16 +3,15 @@ spring:
         activate:
             on-profile: ide
 
-
+server:
+    port: 8082
 
 dataimporter:
     spreadsheet-id: "1Ya7J-nsc2m4D9MuiDbauypL7yWocHGoJj9P7tVimxp8"
-    sheet-range-telegram-accounts: "Telegram аккаунты студентов!A2:C"
-    sheet-range-projects: "Projects!A3:I"
+    sheet-range: "Telegram аккаунты студентов!A2:C"
     admin-ids: []
     auth-service-base-url: "http://localhost:8081"
     profile-service-base-url: "http://localhost:8083"
-    project-service-base-url: "http//localhost:8084"
 
 management:
     endpoint:

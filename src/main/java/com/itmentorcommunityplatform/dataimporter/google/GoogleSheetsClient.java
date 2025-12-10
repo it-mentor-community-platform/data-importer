@@ -61,9 +61,9 @@ public class GoogleSheetsClient {
         }
     }
 
-    public List<List<Object>> readSheet(String spreedSheetRange) throws IOException {
+    public List<List<Object>> readSheet() throws IOException {
         String spreadsheetId = props.getSpreadsheetId();
-        String range = spreedSheetRange;
+        String range = props.getSheetRange();
         log.debug("Reading Google Sheet: id={}, range={}", spreadsheetId, range);
         ValueRange response = sheetsService.spreadsheets().values()
                 .get(spreadsheetId, range)
