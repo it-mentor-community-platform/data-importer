@@ -3,6 +3,7 @@ package com.itmentorcommunityplatform.dataimporter.httpclient;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
+import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -16,7 +17,7 @@ import java.time.Duration;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class InterServiceHttpClient {
+public class ServiceHttpClient {
 
     private final DataImporterProperties props;
     private final WebClient webClient;
@@ -64,6 +65,30 @@ public class InterServiceHttpClient {
             log.error("Failed to call Profile Service for telegramId={}, error={}",
                     request.telegramUserId(), ex.getMessage(), ex);
             throw new RuntimeException(ex);
+        }
+    }
+
+    public ProfileByGithubResponseDto getProfileByGithubUrl(String githubProfileUrl) {
+        String url = props.getProfileServiceBaseUrl() + "/api/profile/internal/profile/by-github-profile-url";
+        try {
+            ProfileByGithubResponseDto response = webClient.get()
+                    .uri(url + "?url=" + githubProfileUrl)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .retrieve()
+                    .bodyToMono(ProfileByGithubResponseDto.class)
+                    .block(Duration.ofSeconds(10));
+
+            log.info("Successfully fetched profile for GitHub URL: {}", githubProfileUrl);
+            return response;
+
+        } catch (WebClientResponseException wcre) {
+            log.error("Profile Service returned error. status={}, body={}, githubUrl={}",
+                    wcre.getStatusCode().value(), wcre.getResponseBodyAsString(), githubProfileUrl);
+            throw wcre;
+        } catch (Exception ex) {
+            log.error("Failed to fetch profile for githubUrl={}, error={}",
+                    githubProfileUrl, ex.getMessage(), ex);
+            return null;
         }
     }
 }
