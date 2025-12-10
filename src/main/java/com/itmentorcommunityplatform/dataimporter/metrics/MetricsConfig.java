@@ -54,27 +54,4 @@ public class MetricsConfig {
                 .publishPercentileHistogram()
                 .register(registry);
     }
-
-    @Bean
-    public Counter projectImportSuccessCounter(MeterRegistry registry) {
-        return Counter.builder("data_importer_projects_success_total")
-                .description("Total successfully imported projects")
-                .register(registry);
-    }
-
-    @Bean
-    public Counter projectImportErrorCounter(MeterRegistry registry) {
-        return Counter.builder("data_importer_projects_error_total")
-                .description("Total failed project imports")
-                .register(registry);
-    }
-
-    @Bean
-    public Timer projectImportDurationTimer(MeterRegistry registry) {
-        return Timer.builder("data_importer_projects_import_duration_seconds")
-                .description("Time taken to complete projects import in seconds")
-                .publishPercentiles(0.5, 0.95, 0.99)
-                .publishPercentileHistogram()
-                .register(registry);
-    }
 }
