@@ -4,6 +4,9 @@ import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
+import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.InterServiceHttpClient;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ public class ProfileImportService {
     private final GoogleSheetsClient googleSheetsClient;
     private final ServiceHttpClient httpClient;
     private final DataImporterProperties properties;
+    private final InterServiceHttpClient httpClient;
 
     private final Counter profilesImportSuccessCounter;
     private final Counter profilesImportErrorCounter;
