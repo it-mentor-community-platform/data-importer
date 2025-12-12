@@ -16,4 +16,5 @@ public class DataImporterProperties {
     private List<Long> adminIds;
     private String authServiceBaseUrl;
     private String profileServiceBaseUrl;
+    private String projectServiceBaseUrl;
 }

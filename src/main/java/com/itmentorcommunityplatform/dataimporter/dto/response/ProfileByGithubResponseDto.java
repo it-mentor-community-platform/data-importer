@@ -1,5 +1,11 @@
 package com.itmentorcommunityplatform.dataimporter.dto.response;
 
-public record ProfileByGithubResponseDto(Long telegramUserId, ProfileDetailsDto details) {
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record ProfileByGithubResponseDto(
+        @JsonProperty("telegram_user_id")
+        Long telegramUserId,
+        @JsonProperty("details")
+        ProfileDetailsDto details) {
 }
 
