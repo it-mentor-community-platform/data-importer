@@ -16,7 +16,7 @@ import java.time.Duration;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class InterServiceHttpClient {
+public class ServiceHttpClient {
 
     private final DataImporterProperties props;
     private final WebClient webClient;
@@ -66,4 +66,5 @@ public class InterServiceHttpClient {
             throw new RuntimeException(ex);
         }
     }
+
 }

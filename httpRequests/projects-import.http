@@ -1,18 +1,18 @@
 ### Successful start - admin role
-POST http://localhost:8080/api/data-importer/start-profiles-import
+POST http://localhost:8082/api/data-importer/start-projects-import
 Content-Type: application/json
 X-User-Roles: ADMIN
 
 ### Missing roles header -> 403
-POST http://localhost:8080/api/data-importer/start-profiles-import
+POST http://localhost:8082/api/data-importer/start-projects-import
 Content-Type: application/json
 
 ### Not admin -> 403
-POST http://localhost:8080/api/data-importer/start-profiles-import
+POST http://localhost:8082/api/data-importer/start-projects-import
 Content-Type: application/json
 X-User-Roles: STUDENT
 
 ### Multiple roles -> admin included
-POST http://localhost:8080/api/data-importer/start-profiles-import
+POST http://localhost:8082/api/data-importer/start-projects-import
 Content-Type: application/json
 X-User-Roles: STUDENT,ADMIN
