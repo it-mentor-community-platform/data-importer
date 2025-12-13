@@ -3,6 +3,7 @@ package com.itmentorcommunityplatform.dataimporter.httpclient;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
+import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -10,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
 
@@ -64,6 +66,30 @@ public class ServiceHttpClient {
             log.error("Failed to call Profile Service for telegramId={}, error={}",
                     request.telegramUserId(), ex.getMessage(), ex);
             throw new RuntimeException(ex);
+        }
+    }
+
+    public ProfileByGithubResponseDto getProfileByGithubUrl(String githubProfileUrl) {
+
+        String url = UriComponentsBuilder
+                .fromHttpUrl(props.getProfileServiceBaseUrl())
+                .path("/api/profile/internal/profile/by-github-profile-url")
+                .queryParam("url", githubProfileUrl)
+                .toUriString();
+
+        try {
+            ProfileByGithubResponseDto response = webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(ProfileByGithubResponseDto.class)
+                    .block(Duration.ofSeconds(10));
+
+            log.info("Fetched OK for GitHub URL: {}", githubProfileUrl);
+            return response;
+
+        } catch (Exception ex) {
+            log.error("Failed. url={}, error={}", githubProfileUrl, ex.getMessage());
+            return null;
         }
     }
 

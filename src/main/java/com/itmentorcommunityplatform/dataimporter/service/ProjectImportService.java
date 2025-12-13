@@ -1,7 +1,10 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
+import com.itmentorcommunityplatform.dataimporter.dto.request.ProjectUpsertRequestDto;
+import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ import java.util.concurrent.Executors;
 public class ProjectImportService {
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
+    private final ServiceHttpClient httpClient;
 
     private final Counter projectImportSuccessCounter;
     private final Counter projectImportErrorCounter;
@@ -83,6 +87,25 @@ public class ProjectImportService {
                     log.debug("Skipping duplicate project: {} at row {}", githubRepositoryLink, i);
                     continue;
                 }
+
+                ProfileByGithubResponseDto profile = httpClient
+                        .getProfileByGithubUrl(githubProfileLink);
+
+                if (profile == null || profile.telegramUserId() == null) {
+                    log.warn("Profile not found or invalid Telegram User ID for GitHub URL: {} at row {}",
+                            githubProfileLink, i);
+                    continue;
+                }
+
+
+                var requestDto = new ProjectUpsertRequestDto(
+                        profile.telegramUserId(),
+                        githubRepositoryLink,
+                        programmingLanguage,
+                        roadmapProject,
+                        parseTimestamp(addedTimestamp),
+                        PROJECT_SOURCE_TYPE
+                );
 
                 try {
                     //  httpClient.upsertProject(requestDto);
