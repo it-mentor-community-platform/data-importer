@@ -3,6 +3,8 @@ spring:
         activate:
             on-profile: ide
 
+    kafka:
+        bootstrap-servers: localhost:29092
 
 
 dataimporter:

@@ -3,6 +3,9 @@ spring:
     activate:
       on-profile: local-stack
 
+  kafka:
+    bootstrap-servers: kafka:9092
+
 server:
   port: 8080
 
