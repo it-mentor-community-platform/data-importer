@@ -1,7 +1,6 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
-import com.itmentorcommunityplatform.dataimporter.dto.request.ProjectUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
@@ -12,8 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
+import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -97,16 +97,6 @@ public class ProjectImportService {
                     continue;
                 }
 
-
-                var requestDto = new ProjectUpsertRequestDto(
-                        profile.telegramUserId(),
-                        githubRepositoryLink,
-                        programmingLanguage,
-                        roadmapProject,
-                        parseTimestamp(addedTimestamp),
-                        PROJECT_SOURCE_TYPE
-                );
-
                 try {
                     //  httpClient.upsertProject(requestDto);
                     processedProjects.add(githubRepositoryLink);
@@ -134,14 +124,15 @@ public class ProjectImportService {
 
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("MMMM, yyyy", Locale.forLanguageTag("ru"));
-            sdf.setDateFormatSymbols(new java.text.DateFormatSymbols() {{
+            sdf.setDateFormatSymbols(new DateFormatSymbols() {{
                 setMonths(RU_MONTHS);
             }});
-            Date date = sdf.parse(dateStr.toLowerCase());
-            return date.getTime();
+            return sdf.parse(dateStr.toLowerCase())
+                    .toInstant()
+                    .getEpochSecond();
         } catch (Exception e) {
             log.warn("Failed to parse date '{}': {}", dateStr, e.getMessage());
-            return System.currentTimeMillis();
+            return Instant.now().getEpochSecond();
         }
     }
 
