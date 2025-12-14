@@ -5,6 +5,8 @@ public record ProjectUpsertRequestDto(
         String githubRepositoryUrl,
         String programmingLanguage,
         String roadmapProject,
+        Long telegramUserId,
+        String telegramUsername,
         Long addedTimestamp,
         String projectSourceType) {
 }
