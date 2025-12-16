@@ -106,7 +106,7 @@ public class ProjectImportService {
                         profile.telegramUserId(),
                         getTelegramUsernameFromUrl(profile.details().getTelegramUrl()),
                         parseTimestamp(addedTimestamp),
-                        "DATA_IMPORTER"
+                        PROJECT_SOURCE_TYPE
                 );
 
                 try {
