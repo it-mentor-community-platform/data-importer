@@ -2,6 +2,7 @@ package com.itmentorcommunityplatform.dataimporter.httpclient;
 
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
+import com.itmentorcommunityplatform.dataimporter.dto.request.ProjectUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -93,4 +94,29 @@ public class ServiceHttpClient {
         }
     }
 
+    public void upsertProject(ProjectUpsertRequestDto requestDto) {
+
+        String uri = props.getProjectServiceBaseUrl() + "/api/projects/internal/project";
+
+        try {
+            webClient.post()
+                    .uri(uri)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .bodyValue(requestDto)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block(Duration.ofSeconds(10));
+
+            log.info("Successfully upsert project in ProjectService: authorTelegramUserId={}, roadmapProject={}",
+                    requestDto.authorTelegramUserId(), requestDto.roadmapProject());
+        } catch (WebClientResponseException wcre) {
+            log.error("ProjectService returned error. status={}, body={}, telegramId={}, roadmapProject={}",
+                    wcre.getStatusCode().value(), wcre.getResponseBodyAsString(), requestDto.telegramUserId(), requestDto.roadmapProject());
+            throw wcre;
+        }catch (Exception ex) {
+            log.error("Failed upsert project in ProjectService: authorTelegramUserId={}, roadmapProject={}",
+                    requestDto.authorTelegramUserId(), requestDto.roadmapProject());
+        }
+
+    }
 }
