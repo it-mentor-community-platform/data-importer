@@ -1,6 +1,7 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
+import com.itmentorcommunityplatform.dataimporter.dto.request.ProjectUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
@@ -97,8 +98,19 @@ public class ProjectImportService {
                     continue;
                 }
 
+                ProjectUpsertRequestDto requestDto = new ProjectUpsertRequestDto(
+                        profile.telegramUserId(),
+                        githubRepositoryLink,
+                        programmingLanguage,
+                        roadmapProject,
+                        profile.telegramUserId(),
+                        getTelegramUsernameFromUrl(profile.details().getTelegramUrl()),
+                        parseTimestamp(addedTimestamp),
+                        "DATA_IMPORTER"
+                );
+
                 try {
-                    //  httpClient.upsertProject(requestDto);
+                    httpClient.upsertProject(requestDto);
                     processedProjects.add(githubRepositoryLink);
                     projectImportSuccessCounter.increment();
                     processed++;
@@ -118,16 +130,21 @@ public class ProjectImportService {
         }
     }
 
+    private String getTelegramUsernameFromUrl(String url){
+        return url.substring(url.lastIndexOf('/'));
+    }
 
     private Long parseTimestamp(String dateStr) {
         if (dateStr.isEmpty()) return null;
 
         try {
+            dateStr = dateStr.replace('\u00A0', ' ').trim();
+
             SimpleDateFormat sdf = new SimpleDateFormat("MMMM, yyyy", Locale.forLanguageTag("ru"));
             sdf.setDateFormatSymbols(new DateFormatSymbols() {{
                 setMonths(RU_MONTHS);
             }});
-            return sdf.parse(dateStr.toLowerCase())
+            return sdf.parse(dateStr)
                     .toInstant()
                     .getEpochSecond();
         } catch (Exception e) {

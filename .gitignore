@@ -14,7 +14,7 @@ docker-compose.override.yml
 .env
 *.secret
 *.key
-credentials.json
+src/main/resources/credentials.json
 src/main/resources/credentials.json
 
 HELP.md
