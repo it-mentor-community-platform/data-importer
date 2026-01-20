@@ -16,8 +16,9 @@ dataimporter:
   admin-ids: []
   auth-service-base-url: "http://auth-service:8080"
   profile-service-base-url: "http://profile-service:8080"
+  project-service-base-url: "http://project-service:8080"
 
 management:
-    endpoint:
-        health:
-          show-details: always
+  endpoint:
+    health:
+      show-details: always
