@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 public class ProjectEventsListener {
 
     private static final String DATA_IMPORTER_SOURCE = "DATA_IMPORTER";
+    private final AppendProjectToSheetsService appendProjectToSheetsService;
+
 
     @KafkaListener(
             topics = "projects.project.created",
@@ -23,6 +25,8 @@ public class ProjectEventsListener {
             log.debug("Skipping project event from source: {}", event.getProjectSourceType());
             return;
         }
+
+        appendProjectToSheetsService.addProjectToSheets(event);
         log.info("Received new project event: {}", event);
     }
 }

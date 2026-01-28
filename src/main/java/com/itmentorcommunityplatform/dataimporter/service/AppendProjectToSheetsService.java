@@ -1,10 +1,9 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
-import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.event.ProjectCreatedEvent;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProjectSheetsDto;
+import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.mapper.ProjectSheetsMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,33 +17,15 @@ import java.util.List;
 
 public class AppendProjectToSheetsService {
 
-
-    private final DataImporterProperties properties;
     private final ProjectSheetsMapper mapper;
-    private final Sheets sheet;
-
+    private final GoogleSheetsClient googleSheetsClient;
 
     public void addProjectToSheets(ProjectCreatedEvent projectCreatedEvent) {
 
         ValueRange valueRange = new ValueRange()
                 .setValues(buildProjectSheetRow(projectCreatedEvent));
 
-        try {
-            sheet.spreadsheets()
-                    .values()
-                    .append(properties.getSpreadsheetId(), properties.getSheetRangeProjects(), valueRange)
-                    .setValueInputOption("USER_ENTERED")
-                    .execute();
-
-        } catch (Exception e) {
-            log.error("[Sheets] Failed to append row spreadsheetId={}, range={}, authorTelegramUserId={}",
-                    properties.getSpreadsheetId(),
-                    properties.getSheetRangeProjects(),
-                    projectCreatedEvent.getAuthorTelegramUserId(),
-                    e);
-
-            throw new RuntimeException("Failed to append to Google Sheets", e);
-        }
+        googleSheetsClient.addProjectToSheets(valueRange);
 
     }
 
@@ -60,7 +41,9 @@ public class AppendProjectToSheetsService {
                 projectSheetsDto.getRepositoryName(),
                 projectSheetsDto.getGithubRepositoryUrl(),
                 projectSheetsDto.getGithubUsername(),
-                projectSheetsDto.getGithubUserUrl()
+                projectSheetsDto.getGithubUserUrl(),
+                "=ЕСЛИ(СЧЁТЕСЛИ(Reviews!D:D; INDIRECT(\"E\"&ROW())) + " +
+                        "СЧЁТЕСЛИ('Спонсируемые ревью'!B:B; INDIRECT(\"E\"&ROW())) > 0; \"Есть\"; \"Нет\")"
         ));
     }
 }

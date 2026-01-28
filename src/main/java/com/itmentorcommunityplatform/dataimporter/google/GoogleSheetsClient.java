@@ -45,7 +45,7 @@ public class GoogleSheetsClient {
         try {
             GoogleCredentials credentials = loadCredentials();
             credentials = credentials.createScoped(
-                    Collections.singletonList(SheetsScopes.SPREADSHEETS_READONLY)
+                    Collections.singletonList(SheetsScopes.SPREADSHEETS)
             );
             sheetsService = new Sheets.Builder(
                     GoogleNetHttpTransport.newTrustedTransport(),
@@ -88,5 +88,24 @@ public class GoogleSheetsClient {
         throw new IllegalStateException(
                 "Google credentials not configured: neither google.credentials.path nor google.credentials.json is set"
         );
+    }
+
+    public void addProjectToSheets(ValueRange range) {
+
+        try {
+            sheetsService.spreadsheets()
+                    .values()
+                    .append(props.getSpreadsheetId(), props.getSheetRangeProjects(), range)
+                    .setValueInputOption("USER_ENTERED")
+                    .execute();
+
+        } catch (Exception e) {
+            log.error("[Sheets] Failed to append row spreadsheetId={}, range={}",
+                    props.getSpreadsheetId(),
+                    props.getSheetRangeProjects(),
+                    e.getMessage());
+
+            throw new RuntimeException("Failed to append to Google Sheets", e);
+        }
     }
 }

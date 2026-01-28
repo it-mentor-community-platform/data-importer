@@ -7,6 +7,12 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
 @Mapper(componentModel = "spring")
 public interface ProjectSheetsMapper {
 
@@ -49,10 +55,17 @@ public interface ProjectSheetsMapper {
 
     @Named("toMonthYear")
     default String toMonthYear(Long timestamp) {
-        return java.time.Instant.ofEpochSecond(timestamp)
-                .atZone(java.time.ZoneId.of("Europe/Berlin"))
-                .format(java.time.format.DateTimeFormatter.ofPattern(
-                        "LLLL, yyyy", java.util.Locale.forLanguageTag("ru")));
+
+        Instant instant = Instant.ofEpochSecond(timestamp);
+
+        ZonedDateTime zdt = instant.atZone(ZoneId.systemDefault());
+
+        String formatted = zdt.format(
+                DateTimeFormatter.ofPattern("LLLL, yyyy", Locale.forLanguageTag("ru"))
+        );
+
+        return formatted.substring(0, 1).toUpperCase() + formatted.substring(1);
+
     }
 
 }
