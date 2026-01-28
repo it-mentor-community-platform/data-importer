@@ -20,6 +20,12 @@ public class AppendProjectToSheetsService {
     private final ProjectSheetsMapper mapper;
     private final GoogleSheetsClient googleSheetsClient;
 
+    private static final String HAS_REVIEW_FORMULA = """
+            =ЕСЛИ
+            (СЧЁТЕСЛИ(Reviews!D:D; INDIRECT("E"&ROW()))+
+            СЧЁТЕСЛИ('Спонсируемые ревью'!B:B; INDIRECT("E"&ROW())) > 0; "Есть"; "Нет")
+            """;
+
     public void addProjectToSheets(ProjectCreatedEvent projectCreatedEvent) {
 
         ValueRange valueRange = new ValueRange()
@@ -42,8 +48,7 @@ public class AppendProjectToSheetsService {
                 projectSheetsDto.getGithubRepositoryUrl(),
                 projectSheetsDto.getGithubUsername(),
                 projectSheetsDto.getGithubUserUrl(),
-                "=ЕСЛИ(СЧЁТЕСЛИ(Reviews!D:D; INDIRECT(\"E\"&ROW())) + " +
-                        "СЧЁТЕСЛИ('Спонсируемые ревью'!B:B; INDIRECT(\"E\"&ROW())) > 0; \"Есть\"; \"Нет\")"
+                HAS_REVIEW_FORMULA
         ));
     }
 }

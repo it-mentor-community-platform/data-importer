@@ -9,6 +9,7 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
+import com.itmentorcommunityplatform.dataimporter.dto.event.ProjectCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -99,8 +100,10 @@ public class GoogleSheetsClient {
                     .setValueInputOption("USER_ENTERED")
                     .execute();
 
+            log.info("[Sheets] The project has been successfully added to the google sheet");
+
         } catch (Exception e) {
-            log.error("[Sheets] Failed to append row spreadsheetId={}, range={}",
+            log.error("[Sheets] Failed to append row spreadsheetId={}, range={}, reason={} ",
                     props.getSpreadsheetId(),
                     props.getSheetRangeProjects(),
                     e.getMessage());
