@@ -9,6 +9,7 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
+import com.itmentorcommunityplatform.dataimporter.dto.event.ProjectCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +46,7 @@ public class GoogleSheetsClient {
         try {
             GoogleCredentials credentials = loadCredentials();
             credentials = credentials.createScoped(
-                    Collections.singletonList(SheetsScopes.SPREADSHEETS_READONLY)
+                    Collections.singletonList(SheetsScopes.SPREADSHEETS)
             );
             sheetsService = new Sheets.Builder(
                     GoogleNetHttpTransport.newTrustedTransport(),
@@ -88,5 +89,26 @@ public class GoogleSheetsClient {
         throw new IllegalStateException(
                 "Google credentials not configured: neither google.credentials.path nor google.credentials.json is set"
         );
+    }
+
+    public void addProjectToSheets(ValueRange range) {
+
+        try {
+            sheetsService.spreadsheets()
+                    .values()
+                    .append(props.getSpreadsheetId(), props.getSheetRangeProjects(), range)
+                    .setValueInputOption("USER_ENTERED")
+                    .execute();
+
+            log.info("[Sheets] The project has been successfully added to the google sheet");
+
+        } catch (Exception e) {
+            log.error("[Sheets] Failed to append row spreadsheetId={}, range={}, reason={} ",
+                    props.getSpreadsheetId(),
+                    props.getSheetRangeProjects(),
+                    e.getMessage());
+
+            throw new RuntimeException("Failed to append to Google Sheets", e);
+        }
     }
 }

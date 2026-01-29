@@ -28,4 +28,5 @@ public class ProjectCreatedEvent {
 
     @JsonProperty("project_source_type")
     private String projectSourceType;
+
 }
