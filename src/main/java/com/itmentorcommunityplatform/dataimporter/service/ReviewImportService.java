@@ -119,7 +119,6 @@ public class ReviewImportService {
         return "https://t.me/" + telegram.substring(telegram.indexOf("@") + 1).trim();
     }
 
-
     private Integer parsePrice(String priceRaw) {
         if (priceRaw == null || priceRaw.isBlank()) {
             return 0;

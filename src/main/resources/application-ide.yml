@@ -9,7 +9,7 @@ spring:
 
 dataimporter:
   spreadsheet-id: "1Ya7J-nsc2m4D9MuiDbauypL7yWocHGoJj9P7tVimxp8"
-  mentor-spreadsheet-id: "1DkIIcE6oUtcK9jjfrOyUgatb6DIxL5GXEn3kvUp4Lms"
+  mentor-spreadsheet-id: "1oP6a4wcItGOlbD6OYpV-u5Z1jFJAhLEq-llOZSHP414" # локальная таблца
   sheet-range-telegram-accounts: "Telegram аккаунты студентов!A2:C"
   sheet-range-projects: "Projects!A3:I"
   sheet-range-reviews: "B7:E"
