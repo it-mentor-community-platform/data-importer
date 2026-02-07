@@ -9,7 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,6 +43,8 @@ public class ReviewImportService {
                 return;
             }
 
+            Map<String, Long> mentorIdCache = new HashMap<>();
+
             String currentProjectName = "";
             int totalImportedCount = 0;
 
@@ -50,13 +54,13 @@ public class ReviewImportService {
                 }
 
                 String projectInRow = row.size() > 0 ? String.valueOf(row.get(0)).trim() : "";
-                if (!projectInRow.isEmpty()) {
-                    currentProjectName = projectInRow;
-                }
-
                 String telegramRow = row.size() > 1 ? String.valueOf(row.get(1)).trim() : "";
                 String languagesRaw = row.size() > 2 ? String.valueOf(row.get(2)).trim() : "";
                 String priceRaw = row.size() > 3 ? String.valueOf(row.get(3)).trim() : "";
+
+                if (!projectInRow.isEmpty()) {
+                    currentProjectName = projectInRow;
+                }
 
                 String telegramUrl = tgUrlFromTgName(telegramRow);
 
@@ -64,10 +68,14 @@ public class ReviewImportService {
                     continue;
                 }
 
-                Long mentorTelegramId = httpClient.getTelegramUserIdByUrl(telegramUrl);
+                Long mentorTelegramId = mentorIdCache.computeIfAbsent(telegramUrl, url -> {
+                    log.debug("Cache miss for {}, fetching ID from Profile Service", url);
+                    return httpClient.getTelegramUserIdByUrl(url);
+                });
 
                 if (mentorTelegramId == null) {
                     log.warn("Skip: Mentor with url {} not found in Profile Service", telegramUrl);
+                    mentorIdCache.remove(telegramUrl);
                     continue;
                 }
 
