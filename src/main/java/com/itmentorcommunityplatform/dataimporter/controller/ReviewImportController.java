@@ -1,5 +1,6 @@
 package com.itmentorcommunityplatform.dataimporter.controller;
 
+import com.itmentorcommunityplatform.dataimporter.controller.api.GuaranteedReviewsImportApi;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportStartResponseDto;
 import com.itmentorcommunityplatform.dataimporter.service.ReviewImportService;
 import com.itmentorcommunityplatform.dataimporter.validator.RoleValidator;
@@ -15,7 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/data-importer")
-public class ReviewImportController {
+public class ReviewImportController implements GuaranteedReviewsImportApi {
 
     private final ReviewImportService reviewImportService;
 

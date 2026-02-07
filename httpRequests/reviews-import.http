@@ -1,0 +1,7 @@
+### Successful start - admin role
+POST http://localhost:8082/api/data-importer/start-guaranteed-reviews-import
+X-User-Roles: ADMIN
+
+### Not admin -> 403
+POST http://localhost:8082/api/data-importer/start-guaranteed-reviews-import
+X-User-Roles: STUDENT
