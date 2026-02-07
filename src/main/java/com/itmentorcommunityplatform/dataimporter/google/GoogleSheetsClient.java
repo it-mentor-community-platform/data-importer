@@ -9,7 +9,6 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
-import com.itmentorcommunityplatform.dataimporter.dto.event.ProjectCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,6 +68,17 @@ public class GoogleSheetsClient {
         ValueRange response = sheetsService.spreadsheets().values()
                 .get(spreadsheetId, range)
                 .execute();
+        List<List<Object>> values = response.getValues();
+        return values == null ? Collections.emptyList() : values;
+    }
+
+    public List<List<Object>> readSheet(String spreadsheetId, String range) throws IOException {
+        log.debug("Reading Google Sheet: id={}, range={}", spreadsheetId, range);
+
+        ValueRange response = sheetsService.spreadsheets().values()
+                .get(spreadsheetId, range)
+                .execute();
+
         List<List<Object>> values = response.getValues();
         return values == null ? Collections.emptyList() : values;
     }

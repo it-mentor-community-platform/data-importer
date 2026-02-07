@@ -10,11 +10,18 @@ import java.util.List;
 @ConfigurationProperties(prefix = "dataimporter")
 @Data
 public class DataImporterProperties {
+
     private String spreadsheetId;
+    private String mentorSpreadsheetId;
+
     private String sheetRangeTelegramAccounts;
     private String sheetRangeProjects;
+    private String sheetRangeReviews;
+
     private List<Long> adminIds;
+
     private String authServiceBaseUrl;
     private String profileServiceBaseUrl;
     private String projectServiceBaseUrl;
+    private String mentorServiceBaseUrl;
 }

@@ -1,6 +1,7 @@
 package com.itmentorcommunityplatform.dataimporter.httpclient;
 
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
+import com.itmentorcommunityplatform.dataimporter.dto.request.GuaranteedReviewRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProjectUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
@@ -113,10 +114,58 @@ public class ServiceHttpClient {
             log.error("ProjectService returned error. status={}, body={}, telegramId={}, roadmapProject={}",
                     wcre.getStatusCode().value(), wcre.getResponseBodyAsString(), requestDto.telegramUserId(), requestDto.roadmapProject());
             throw wcre;
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             log.error("Failed upsert project in ProjectService: authorTelegramUserId={}, roadmapProject={}",
                     requestDto.authorTelegramUserId(), requestDto.roadmapProject());
         }
+    }
 
+    public void upsertGuaranteedReview(GuaranteedReviewRequestDto requestDto, Long telegramUserId) {
+        String uri = props.getMentorServiceBaseUrl() + "/api/mentor/internal/guaranteed-review";
+
+        try {
+            webClient.post()
+                    .uri(uri)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header("X-Telegram-User-Id", String.valueOf(telegramUserId))
+                    .bodyValue(requestDto)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block(Duration.ofSeconds(10));
+
+            log.info("Successfully upserted guaranteed review: mentorUrl={}, language={}, projectType={}",
+                    requestDto.getTelegramUrl(), requestDto.getLanguage(), requestDto.getProjectType());
+
+        } catch (WebClientResponseException webClientEx) {
+            log.error("Mentor Service returned error. status={}, body={}, mentorUrl={}",
+                    webClientEx.getStatusCode().value(), webClientEx.getResponseBodyAsString(), requestDto.getTelegramUrl());
+            throw webClientEx;
+        } catch (Exception ex) {
+            log.error("Failed to call Mentor Service for mentorUrl={}, error={}",
+                    requestDto.getTelegramUrl(), ex.getMessage());
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public Long getTelegramUserIdByUrl(String telegramUrl) {
+        String url = UriComponentsBuilder
+                .fromHttpUrl(props.getProfileServiceBaseUrl())
+                .path("/api/profile/internal/profile/by-telegram-url")
+                .queryParam("url", telegramUrl)
+                .toUriString();
+
+        try {
+            ProfileByGithubResponseDto response = webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(ProfileByGithubResponseDto.class)
+                    .block(Duration.ofSeconds(5));
+
+            return response != null ? response.telegramUserId() : null;
+
+        } catch (Exception ex) {
+            log.error("Failed to find profile for telegramUrl={}, error={}", telegramUrl, ex.getMessage());
+            return null;
+        }
     }
 }
