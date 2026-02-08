@@ -1,6 +1,8 @@
 spring:
   application:
     name: data-importer
+  config:
+    import: optional:file:.env[.properties]
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
@@ -37,5 +39,4 @@ management:
 
 google:
   credentials:
-    path: ${GOOGLE_APPLICATION_CREDENTIALS:}
     json: ${GOOGLE_APPLICATION_CREDENTIALS_JSON:}

@@ -9,7 +9,6 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
-import com.itmentorcommunityplatform.dataimporter.dto.event.ProjectCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -32,9 +30,6 @@ public class GoogleSheetsClient {
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
     private final DataImporterProperties props;
-
-    @Value("${google.credentials.path:}")
-    private String credentialsPath;
 
     @Value("${google.credentials.json:}")
     private String credentialsJson;
@@ -62,24 +57,28 @@ public class GoogleSheetsClient {
         }
     }
 
-    public List<List<Object>> readSheet(String spreedSheetRange) throws IOException {
-        String spreadsheetId = props.getSpreadsheetId();
-        String range = spreedSheetRange;
-        log.debug("Reading Google Sheet: id={}, range={}", spreadsheetId, range);
+    public List<List<Object>> readSheet(String projectSpreedSheetRange) throws IOException {
+        String projectSpreadsheetId = props.getProjectSpreadsheetId();
+        log.debug("Reading Google Sheet: id={}, range={}", projectSpreadsheetId, projectSpreedSheetRange);
         ValueRange response = sheetsService.spreadsheets().values()
-                .get(spreadsheetId, range)
+                .get(projectSpreadsheetId, projectSpreedSheetRange)
                 .execute();
         List<List<Object>> values = response.getValues();
         return values == null ? Collections.emptyList() : values;
     }
 
+    public List<List<Object>> readSheet(String spreadsheetId, String range) throws IOException {
+        log.debug("Reading Google Sheet: id={}, range={}", spreadsheetId, range);
+
+        ValueRange response = sheetsService.spreadsheets().values()
+                .get(spreadsheetId, range)
+                .execute();
+
+        List<List<Object>> values = response.getValues();
+        return values == null ? Collections.emptyList() : values;
+    }
+
     private GoogleCredentials loadCredentials() throws IOException {
-        if (!credentialsPath.isBlank()) {
-            log.info("Loading Google credentials from file: {}", credentialsPath);
-            try (FileInputStream in = new FileInputStream(credentialsPath)) {
-                return GoogleCredentials.fromStream(in);
-            }
-        }
         if (!credentialsJson.isBlank()) {
             log.info("Loading Google credentials from JSON config property");
             return GoogleCredentials.fromStream(
@@ -96,7 +95,7 @@ public class GoogleSheetsClient {
         try {
             sheetsService.spreadsheets()
                     .values()
-                    .append(props.getSpreadsheetId(), props.getSheetRangeProjects(), range)
+                    .append(props.getProjectSpreadsheetId(), props.getSheetRangeProjects(), range)
                     .setValueInputOption("USER_ENTERED")
                     .execute();
 
@@ -104,7 +103,7 @@ public class GoogleSheetsClient {
 
         } catch (Exception e) {
             log.error("[Sheets] Failed to append row spreadsheetId={}, range={}, reason={} ",
-                    props.getSpreadsheetId(),
+                    props.getProjectSpreadsheetId(),
                     props.getSheetRangeProjects(),
                     e.getMessage());
 

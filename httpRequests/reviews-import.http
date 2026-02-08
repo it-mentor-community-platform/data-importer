@@ -1,0 +1,15 @@
+### Successful start - admin role
+POST http://localhost:8082/api/data-importer/start-guaranteed-reviews-import
+X-User-Roles: ADMIN
+
+### Not admin -> 403
+POST http://localhost:8082/api/data-importer/start-guaranteed-reviews-import
+X-User-Roles: STUDENT
+
+### Missing roles header -> 403
+POST http://localhost:8082/api/data-importer/start-profiles-import
+
+### Multiple roles -> admin included
+POST http://localhost:8082/api/data-importer/start-profiles-import
+Content-Type: application/json
+X-User-Roles: STUDENT,ADMIN

@@ -130,7 +130,7 @@ public class ProjectImportService {
         }
     }
 
-    private String getTelegramUsernameFromUrl(String url){
+    private String getTelegramUsernameFromUrl(String url) {
         return url.substring(url.lastIndexOf('/'));
     }
 
@@ -157,5 +157,4 @@ public class ProjectImportService {
     public void shutdown() {
         executor.shutdownNow();
     }
-
 }

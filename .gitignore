@@ -15,7 +15,6 @@ docker-compose.override.yml
 *.secret
 *.key
 src/main/resources/credentials.json
-src/main/resources/credentials.json
 
 HELP.md
 !.mvn/wrapper/maven-wrapper.jar
