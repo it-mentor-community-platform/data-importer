@@ -22,7 +22,7 @@ public class ProfileImportController implements ProfileImportApi {
 
     @Override
     @PostMapping("/start-profiles-import")
-    public ResponseEntity<?> startProfileImport(
+    public ResponseEntity<ImportStartResponseDto> startProfileImport(
             @RequestHeader(value = "X-User-Roles", required = false) List<String> roles
     ){
         RoleValidator.validateAdminRole(roles);

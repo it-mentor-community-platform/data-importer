@@ -57,12 +57,11 @@ public class GoogleSheetsClient {
         }
     }
 
-    public List<List<Object>> readSheet(String spreedSheetRange) throws IOException {
-        String spreadsheetId = props.getSpreadsheetId();
-        String range = spreedSheetRange;
-        log.debug("Reading Google Sheet: id={}, range={}", spreadsheetId, range);
+    public List<List<Object>> readSheet(String projectSpreedSheetRange) throws IOException {
+        String projectSpreadsheetId = props.getProjectSpreadsheetId();
+        log.debug("Reading Google Sheet: id={}, range={}", projectSpreadsheetId, projectSpreedSheetRange);
         ValueRange response = sheetsService.spreadsheets().values()
-                .get(spreadsheetId, range)
+                .get(projectSpreadsheetId, projectSpreedSheetRange)
                 .execute();
         List<List<Object>> values = response.getValues();
         return values == null ? Collections.emptyList() : values;
@@ -96,7 +95,7 @@ public class GoogleSheetsClient {
         try {
             sheetsService.spreadsheets()
                     .values()
-                    .append(props.getSpreadsheetId(), props.getSheetRangeProjects(), range)
+                    .append(props.getProjectSpreadsheetId(), props.getSheetRangeProjects(), range)
                     .setValueInputOption("USER_ENTERED")
                     .execute();
 
@@ -104,7 +103,7 @@ public class GoogleSheetsClient {
 
         } catch (Exception e) {
             log.error("[Sheets] Failed to append row spreadsheetId={}, range={}, reason={} ",
-                    props.getSpreadsheetId(),
+                    props.getProjectSpreadsheetId(),
                     props.getSheetRangeProjects(),
                     e.getMessage());
 

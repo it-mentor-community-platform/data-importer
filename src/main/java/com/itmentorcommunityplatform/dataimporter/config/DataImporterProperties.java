@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 public class DataImporterProperties {
 
-    private String spreadsheetId;
+    private String projectSpreadsheetId;
     private String mentorSpreadsheetId;
 
     private String sheetRangeTelegramAccounts;
