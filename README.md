@@ -17,15 +17,16 @@
 - [Бизнес аналитика - импорт данных](https://github.com/it-mentor-community-platform/meta/blob/main/business-analytics/functionality/data-import.md)
 - [Системная аналитика - импорт данных](https://github.com/it-mentor-community-platform/meta/blob/main/system-analytics/functionality/data-import.md)
 
-   
-### Локальный запуск и тестирование
-1. Для сервиса Data Importer необходим файл credentials.json(его можно получить в Secrets в гитхабе или запроси его у тимлида) 
-   - Скопируй его в src/main/resources
-   - В корне проекта создай файл .env:
+## Локальный запуск и тестирование
+1. Для сервиса Data Importer необходимо получить содержимое credentials.json (из GitHub Secrets или у тимлида).
+   - В корне проекта создайте файл .env
+   - Добавьте переменную и вставьте в неё весь JSON:
    ```env
-   GOOGLE_APPLICATION_CREDENTIALS=src/main/resources/credentials.json
+   GOOGLE_APPLICATION_CREDENTIALS_JSON={"type": "service_account", ...}
    ```
+   - **Важно**: JSON должен быть в одну строку. Чтобы быстро это сделать в IDEA: выделите JSON и нажми Ctrl + Shift + J.
    
+
 2. Запуск
    - Через консоль
    ```bash

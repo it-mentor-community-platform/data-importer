@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -31,9 +30,6 @@ public class GoogleSheetsClient {
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
     private final DataImporterProperties props;
-
-    @Value("${google.credentials.path:}")
-    private String credentialsPath;
 
     @Value("${google.credentials.json:}")
     private String credentialsJson;
@@ -84,12 +80,6 @@ public class GoogleSheetsClient {
     }
 
     private GoogleCredentials loadCredentials() throws IOException {
-        if (!credentialsPath.isBlank()) {
-            log.info("Loading Google credentials from file: {}", credentialsPath);
-            try (FileInputStream in = new FileInputStream(credentialsPath)) {
-                return GoogleCredentials.fromStream(in);
-            }
-        }
         if (!credentialsJson.isBlank()) {
             log.info("Loading Google credentials from JSON config property");
             return GoogleCredentials.fromStream(
