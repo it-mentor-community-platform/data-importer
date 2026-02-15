@@ -5,6 +5,13 @@ spring:
 
   kafka:
     bootstrap-servers: kafka:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
+      ssl.truststore.type: ${KAFKA_SSL_TRUSTSTORE_TYPE}
+      ssl.truststore.location: ${KAFKA_SSL_TRUSTSTORE_LOCATION}
 
 server:
   port: 8080
