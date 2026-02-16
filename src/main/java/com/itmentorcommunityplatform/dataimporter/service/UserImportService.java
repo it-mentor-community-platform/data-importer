@@ -77,10 +77,7 @@ public class UserImportService {
                     skippedDuplicates++;
                     continue;
                 }
-                boolean isAdmin = properties.getAdminIds() != null && properties.getAdminIds().contains(tgId);
-                List<String> rolesToSend = isAdmin
-                        ? List.of(UserRole.ADMIN.name(), UserRole.STUDENT.name())
-                        : List.of(UserRole.STUDENT.name());
+                List<String> rolesToSend = List.of(UserRole.STUDENT.name());
                 UserUpsertRequestDto req = new UserUpsertRequestDto(tgId, rolesToSend);
                 try {
                     httpClient.upsertUser(req);
