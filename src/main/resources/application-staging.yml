@@ -11,6 +11,8 @@ spring:
       sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
       ssl.truststore.type: ${KAFKA_SSL_TRUSTSTORE_TYPE}
       ssl.truststore.location: ${KAFKA_SSL_TRUSTSTORE_LOCATION}
+    topic:
+      projects-project-created: staging.projects.project.created
 
 server:
   port: 8080

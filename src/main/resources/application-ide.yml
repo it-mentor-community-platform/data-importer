@@ -5,6 +5,8 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:29092
+    topic:
+      projects-project-created: projects.project.created
 
 
 dataimporter:
