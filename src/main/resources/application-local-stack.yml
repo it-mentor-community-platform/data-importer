@@ -5,6 +5,8 @@ spring:
 
   kafka:
     bootstrap-servers: kafka:9092
+    topic:
+      projects-project-created: projects.project.created
 
 server:
   port: 8080
