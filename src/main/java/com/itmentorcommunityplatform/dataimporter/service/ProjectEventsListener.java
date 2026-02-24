@@ -16,7 +16,7 @@ public class ProjectEventsListener {
 
 
     @KafkaListener(
-            topics = "projects.project.created",
+            topics = "${spring.kafka.topic.projects-project-created}",
             groupId = "data-importer-cg",
             containerFactory = "kafkaListenerContainerFactory"
     )
