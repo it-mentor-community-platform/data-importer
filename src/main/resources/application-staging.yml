@@ -18,15 +18,15 @@ server:
   port: 8080
 
 dataimporter:
-  project-spreadsheet-id: "1Ya7J-nsc2m4D9MuiDbauypL7yWocHGoJj9P7tVimxp8"
-  mentor-spreadsheet-id: "1DkIIcE6oUtcK9jjfrOyUgatb6DIxL5GXEn3kvUp4Lms" # продовая таблца
+  project-spreadsheet-id: "1CLWecxLuA2x8y9zTpQ-NhI-vvS7jtI9eWLdXJBm1vXM"
+  mentor-spreadsheet-id: "1ZhGCosIRZZHKK1bigXT0dX0P08CJwXWT-8gAtxbE49M"
   sheet-range-telegram-accounts: "Telegram аккаунты студентов!A2:C"
   sheet-range-projects: "Projects!A3:I"
   sheet-range-reviews: "B7:E"
   auth-service-base-url: "http://auth-service:8080"
   profile-service-base-url: "http://profile-service:8080"
   project-service-base-url: "http://project-service:8080"
-  mentor-service-base-url: "http://mentor-service:8085"
+  mentor-service-base-url: "http://mentor-service:8080"
 
 management:
   endpoint:
