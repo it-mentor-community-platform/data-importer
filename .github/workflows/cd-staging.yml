@@ -1,4 +1,4 @@
-name: CD - Deploy to Staging
+name: CD - Update Helm for Staging
 
 on:
   workflow_run:
@@ -10,22 +10,6 @@ on:
       - staging
 
 jobs:
-  deploy:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-
-    steps:
-      - name: Configure kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG_STAGING }}" > ~/.kube/config
-
-      - name: Deploy
-        run: |
-          kubectl rollout restart deployment/data-importer -n staging
-          kubectl rollout status deployment/data-importer -n staging
-
   update-helm:
     name: Update Helm values and create PR
     runs-on: ubuntu-latest
@@ -66,6 +50,8 @@ jobs:
           git push origin "$BRANCH"
 
       - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.HELM_REPO_TOKEN }}
         run: |
           gh pr create \
             --repo it-mentor-community-platform/helm-chart \
@@ -73,5 +59,3 @@ jobs:
             --head "update/data-importer-sha-${{ steps.vars.outputs.sha_short }}" \
             --title "chore: update data-importer to sha-${{ steps.vars.outputs.sha_short }}" \
             --body "Auto-generated PR to update data-importer image tag to \`sha-${{ steps.vars.outputs.sha_short }}\`."
-        env:
-          GITHUB_TOKEN: ${{ secrets.HELM_REPO_TOKEN }}
