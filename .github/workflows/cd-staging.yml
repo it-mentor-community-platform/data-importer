@@ -48,14 +48,10 @@ jobs:
           SHA_SHORT="${SHA_SHORT:0:7}"
           echo "sha_short=$SHA_SHORT" >> "$GITHUB_OUTPUT"
 
-      - name: Install yq
+      - name: Update values-staging.yaml
         uses: mikefarah/yq@v4
         with:
-          cmd: --version
-
-      - name: Update values-staging.yaml
-        run: |
-          yq -i '.services.data-importer.tag = "sha-${{ steps.vars.outputs.sha_short }}"' values-staging.yaml
+          cmd: yq -i '.services.data-importer.tag = "sha-${{ steps.vars.outputs.sha_short }}"' values-staging.yaml
 
       - name: Commit and push changes
         run: |
