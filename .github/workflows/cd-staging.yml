@@ -1,0 +1,81 @@
+name: CD - Deploy to Staging
+
+on:
+  workflow_run:
+    workflows:
+      - "CI - Build & Push Docker Image"
+    types:
+      - completed
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" > ~/.kube/config
+
+      - name: Deploy
+        run: |
+          kubectl rollout restart deployment/data-importer -n staging
+          kubectl rollout status deployment/data-importer -n staging
+
+  update-helm:
+    name: Update Helm values and create PR
+    runs-on: ubuntu-latest
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'staging'
+
+    steps:
+      - name: Checkout helm-chart repo
+        uses: actions/checkout@v4
+        with:
+          repository: it-mentor-community-platform/helm-chart
+          token: ${{ secrets.HELM_REPO_TOKEN }}
+          ref: main
+
+      - name: Compute short SHA
+        id: vars
+        run: |
+          SHA_SHORT="${{ github.event.workflow_run.head_sha }}"
+          SHA_SHORT="${SHA_SHORT:0:7}"
+          echo "sha_short=$SHA_SHORT" >> "$GITHUB_OUTPUT"
+
+      - name: Install yq
+        uses: mikefarah/yq@v4
+        with:
+          cmd: --version
+
+      - name: Update values-staging.yaml
+        run: |
+          yq -i '.services.data-importer.tag = "sha-${{ steps.vars.outputs.sha_short }}"' values-staging.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="update/data-importer-sha-${{ steps.vars.outputs.sha_short }}"
+          git checkout -b "$BRANCH"
+
+          git add values-staging.yaml
+          git commit -m "chore: update data-importer to sha-${{ steps.vars.outputs.sha_short }}"
+          git push origin "$BRANCH"
+
+      - name: Create Pull Request
+        run: |
+          gh pr create \
+            --repo it-mentor-community-platform/helm-chart \
+            --base main \
+            --head "update/data-importer-sha-${{ steps.vars.outputs.sha_short }}" \
+            --title "chore: update data-importer to sha-${{ steps.vars.outputs.sha_short }}" \
+            --body "Auto-generated PR to update data-importer image tag to \`sha-${{ steps.vars.outputs.sha_short }}\`."
+        env:
+          GITHUB_TOKEN: ${{ secrets.HELM_REPO_TOKEN }}
