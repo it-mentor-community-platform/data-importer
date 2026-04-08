@@ -15,11 +15,8 @@ public record ProjectUpsertRequestDto(
         @JsonProperty("roadmap_project")
         String roadmapProject,
 
-        @JsonProperty("telegram_user_id")
-        Long telegramUserId,
-
-        @JsonProperty("telegram_username")
-        String telegramUsername,
+        @JsonProperty("author_telegram_username")
+        String authorTelegramUsername,
 
         @JsonProperty("added_timestamp")
         Long addedTimestamp,

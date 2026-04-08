@@ -112,7 +112,7 @@ public class ServiceHttpClient {
                     requestDto.authorTelegramUserId(), requestDto.roadmapProject());
         } catch (WebClientResponseException wcre) {
             log.error("ProjectService returned error. status={}, body={}, telegramId={}, roadmapProject={}",
-                    wcre.getStatusCode().value(), wcre.getResponseBodyAsString(), requestDto.telegramUserId(), requestDto.roadmapProject());
+                    wcre.getStatusCode().value(), wcre.getResponseBodyAsString(), requestDto.authorTelegramUserId(), requestDto.roadmapProject());
             throw wcre;
         } catch (Exception ex) {
             log.error("Failed upsert project in ProjectService: authorTelegramUserId={}, roadmapProject={}",

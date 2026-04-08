@@ -103,7 +103,6 @@ public class ProjectImportService {
                         githubRepositoryLink,
                         programmingLanguage,
                         roadmapProject,
-                        profile.telegramUserId(),
                         getTelegramUsernameFromUrl(profile.details().getTelegramUrl()),
                         parseTimestamp(addedTimestamp),
                         PROJECT_SOURCE_TYPE
