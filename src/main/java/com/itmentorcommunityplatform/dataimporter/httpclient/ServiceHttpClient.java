@@ -97,7 +97,7 @@ public class ServiceHttpClient {
 
     public void upsertProject(ProjectUpsertRequestDto requestDto) {
 
-        String uri = props.getProjectServiceBaseUrl() + "/api/projects/internal/project";
+        String uri = props.getProjectServiceBaseUrl() + "/api/project/internal/project";
 
         try {
             webClient.post()
