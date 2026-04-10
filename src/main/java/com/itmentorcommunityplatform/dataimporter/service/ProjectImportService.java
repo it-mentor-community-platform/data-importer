@@ -98,12 +98,16 @@ public class ProjectImportService {
                     continue;
                 }
 
+                String telegramUsername = profile.details() != null
+                        ? getTelegramUsernameFromUrl(profile.details().getTelegramUrl())
+                        : null;
+
                 ProjectUpsertRequestDto requestDto = new ProjectUpsertRequestDto(
                         profile.telegramUserId(),
                         githubRepositoryLink,
                         programmingLanguage,
                         roadmapProject,
-                        getTelegramUsernameFromUrl(profile.details().getTelegramUrl()),
+                        telegramUsername,
                         parseTimestamp(addedTimestamp),
                         PROJECT_SOURCE_TYPE
                 );
@@ -130,6 +134,7 @@ public class ProjectImportService {
     }
 
     private String getTelegramUsernameFromUrl(String url) {
+        if (url == null || url.isBlank()) return null;
         return url.substring(url.lastIndexOf('/'));
     }
 
