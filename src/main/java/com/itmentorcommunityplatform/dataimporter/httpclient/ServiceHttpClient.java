@@ -15,6 +15,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.time.Duration;
 
 @Component
@@ -74,7 +75,7 @@ public class ServiceHttpClient {
     public ProfileByGithubResponseDto getProfileByGithubUrl(String githubProfileUrl) {
 
         String url = UriComponentsBuilder
-                .fromHttpUrl(props.getProfileServiceBaseUrl())
+                .fromUri(URI.create(props.getProfileServiceBaseUrl()))
                 .path("/api/profile/internal/profile/by-github-profile-url")
                 .queryParam("url", githubProfileUrl)
                 .toUriString();
@@ -149,7 +150,7 @@ public class ServiceHttpClient {
 
     public Long getTelegramUserIdByUrl(String telegramUrl) {
         String url = UriComponentsBuilder
-                .fromHttpUrl(props.getProfileServiceBaseUrl())
+                .fromUri(URI.create(props.getProfileServiceBaseUrl()))
                 .path("/api/profile/internal/profile/by-telegram-url")
                 .queryParam("url", telegramUrl)
                 .toUriString();
