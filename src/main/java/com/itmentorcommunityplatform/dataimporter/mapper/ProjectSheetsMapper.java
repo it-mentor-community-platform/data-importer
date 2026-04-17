@@ -20,6 +20,7 @@ public interface ProjectSheetsMapper {
     @Mapping(target = "githubUserUrl", expression = "java(extractGithubUserUrl(projectCreatedEvent.getGithubRepositoryUrl()))")
     @Mapping(target = "githubUsername", expression = "java(extractGithubUsername(projectCreatedEvent.getGithubRepositoryUrl()))")
     @Mapping(target = "repositoryName", expression = "java(extractRepositoryName(projectCreatedEvent.getGithubRepositoryUrl()))")
+    @Mapping(target = "roadmapProject", expression = "java(extractRoadmapProject(projectCreatedEvent.getRoadmapProject()))")
     ProjectSheetsDto mapToSheetRow(ProjectCreatedEvent projectCreatedEvent);
 
 
@@ -30,6 +31,15 @@ public interface ProjectSheetsMapper {
         }
 
         return githubUrl.substring(githubUrl.lastIndexOf("/") + 1);
+    }
+
+    @Named("extractRoadmapProject")
+    default String extractRoadmapProject(String roadmapProject) {
+        if (roadmapProject == null || roadmapProject.isBlank()) {
+            return null;
+        }
+
+        return roadmapProject.replace('_','-');
     }
 
     @Named("extractGithubUsername")
