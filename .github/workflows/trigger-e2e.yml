@@ -14,5 +14,5 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: '${{ secrets.E2E_TRIGGER_TOKEN }}'
-          repository: SamoylovSt/e2e-tests
+          repository: it-mentor-community-platform/e2e-tests
           event-type: run-e2e-tests
