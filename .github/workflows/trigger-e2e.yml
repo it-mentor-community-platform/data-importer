@@ -13,6 +13,6 @@ jobs:
       - name: Trigger E2E workflow
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: '${{ secrets.GITHUB_TOKEN }}'
+          token: '${{ secrets.E2E_TRIGGER_TOKEN }}'
           repository: it-mentor-community-platform/e2e-tests
           event-type: run-e2e-tests
