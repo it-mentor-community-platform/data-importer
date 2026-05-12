@@ -11,11 +11,13 @@
 - Java 21
 - [Google API Java Client](https://github.com/googleapis/google-api-java-client) для работы с Google Sheets API
 
-
-
-### Ссылки на репозиторий документации
+## Ссылки на репозиторий документации
 - [Бизнес аналитика - импорт данных](https://github.com/it-mentor-community-platform/meta/blob/main/business-analytics/functionality/data-import.md)
 - [Системная аналитика - импорт данных](https://github.com/it-mentor-community-platform/meta/blob/main/system-analytics/functionality/data-import.md)
+
+## Инструкция по созданию файла credentials.json
+
+https://github.com/it-mentor-community-platform/data-importer/issues/4#issuecomment-3797988709
 
 ## Локальный запуск и тестирование
 1. Для сервиса Data Importer необходимо получить содержимое credentials.json (из GitHub Secrets или у тимлида).
