@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - staging
+  pull_request:
+    branches:
+      - staging
+    types:
+      - opened
+      - edited
+      - synchronize
+      - ready_for_review
   workflow_dispatch:
 
 jobs:
@@ -13,8 +21,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
 
       - name: Get short SHA
         id: vars
