@@ -4,15 +4,37 @@ on:
   push:
     branches:
       - staging
+  pull_request:
+    branches:
+      - staging
+    types:
+      - opened
+      - edited
+      - synchronize
+      - ready_for_review
+  workflow_dispatch:
 
 jobs:
   trigger-e2e:
     name: Trigger E2E Test in e2e repo
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get short SHA
+        id: vars
+        run: |
+          SHA_SHORT=$(git rev-parse --short HEAD)
+          echo "sha_short=$SHA_SHORT" >> $GITHUB_OUTPUT
+
       - name: Trigger E2E workflow
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: '${{ secrets.E2E_TRIGGER_TOKEN }}'
           repository: it-mentor-community-platform/e2e-tests
           event-type: run-e2e-tests
+          client-payload: |
+            {
+              "data_importer_tag": "sha-${{ steps.vars.outputs.sha_short }}"
+            }
