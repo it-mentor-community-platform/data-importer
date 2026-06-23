@@ -15,6 +15,7 @@ public class DataImporterProperties {
     private String sheetRangeTelegramAccounts;
     private String sheetRangeProjects;
     private String sheetRangeReviews;
+    private String sheetRangeProjectReviews;
 
     private String authServiceBaseUrl;
     private String profileServiceBaseUrl;
