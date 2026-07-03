@@ -7,9 +7,9 @@ POST http://localhost:8082/api/data-importer/start-guaranteed-reviews-import
 X-User-Roles: STUDENT
 
 ### Missing roles header -> 403
-POST http://localhost:8082/api/data-importer/start-profiles-import
+POST http://localhost:8082/api/data-importer/start-guaranteed-reviews-import
 
 ### Multiple roles -> admin included
-POST http://localhost:8082/api/data-importer/start-profiles-import
+POST http://localhost:8082/api/data-importer/start-guaranteed-reviews-import
 Content-Type: application/json
 X-User-Roles: STUDENT,ADMIN
