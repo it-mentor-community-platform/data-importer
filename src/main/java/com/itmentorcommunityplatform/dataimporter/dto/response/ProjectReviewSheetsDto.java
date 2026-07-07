@@ -8,28 +8,15 @@ import lombok.Data;
 @AllArgsConstructor
 public class ProjectReviewSheetsDto {
 
-    private String period;
-
-    private String project;
-
-    @JsonProperty("programming_language")
-    private String programmingLanguage;
-
-    @JsonProperty("github_repository_url")
-    private String githubRepositoryUrl;
-
-    @JsonProperty("review_type")
-    private String reviewType;
+    @JsonProperty("project_github_repository_url")
+    private String projectGithubRepositoryUrl;
 
     @JsonProperty("review_url")
     private String reviewUrl;
 
-    @JsonProperty("reviewer_name")
-    private String reviewerName;
+    @JsonProperty("reviewer_telegram_user_id")
+    private Long reviewerTelegramUserId;
 
-    @JsonProperty("reviewer_telegram_username")
-    private String reviewerTelegramUsername;
-
-    @JsonProperty("reviewer_telegram_profile_url")
-    private String reviewerTelegramProfileUrl;
+    @JsonProperty("added_timestamp")
+    private Long addedTimestamp;
 }

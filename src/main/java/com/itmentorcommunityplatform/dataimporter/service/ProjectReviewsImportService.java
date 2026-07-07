@@ -3,12 +3,19 @@ package com.itmentorcommunityplatform.dataimporter.service;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProjectReviewSheetsDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
+import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -21,6 +28,12 @@ public class ProjectReviewsImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
+    private final ServiceHttpClient httpClient;
+
+    private static final String[] RU_MONTHS = {
+            "январь", "февраль", "март", "апрель", "май", "июнь", "июль",
+            "август", "сентябрь", "октябрь", "ноябрь", "декабрь"
+    };
 
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "project-reviews-import-thread"));
@@ -42,6 +55,8 @@ public class ProjectReviewsImportService {
                 return;
             }
 
+            Map<String, Long> mentorIdCache = new HashMap<>();
+
             int parsed = 0;
 
             for (List<Object> row : rows) {
@@ -51,30 +66,36 @@ public class ProjectReviewsImportService {
                 }
 
                 String period = getCell(row, 0);
-                String project = getCell(row, 1);
-                String programmingLanguage = getCell(row, 2);
                 String githubRepositoryUrl = getCell(row, 3);
-                String reviewType = getCell(row, 4);
                 String reviewUrl = getCell(row, 5);
-                String reviewerName = getCell(row, 6);
-                String reviewerTelegramUsername = getCell(row, 7);
                 String reviewerTelegramProfileUrl = getCell(row, 8);
 
+                Long mentorTelegramId = mentorIdCache.computeIfAbsent(reviewerTelegramProfileUrl, url -> {
+                    log.debug("Cache miss for {}, fetching ID from Profile Service", url);
+                    return httpClient.getTelegramUserIdByUrl(url);
+                });
+
+                if (mentorTelegramId == null) {
+                    log.warn("Skip: Mentor with url {} not found in Profile Service", reviewerTelegramProfileUrl);
+                    mentorIdCache.remove(reviewerTelegramProfileUrl);
+                    continue;
+
+                }
+
                 ProjectReviewSheetsDto projectReview = new ProjectReviewSheetsDto(
-                        period,
-                        project,
-                        programmingLanguage,
                         githubRepositoryUrl,
-                        reviewType,
                         reviewUrl,
-                        reviewerName,
-                        reviewerTelegramUsername,
-                        reviewerTelegramProfileUrl
+                        mentorTelegramId,
+                        parseTimestamp(period)
                 );
-
-                log.info("Parsed project review: {}", projectReview);
-
-                parsed++;
+                try {
+                    httpClient.upsertProjectReview(projectReview);
+                    parsed++;
+                    log.info("Parsed project review: {}", projectReview);
+                } catch (Exception ex) {
+                    log.error("Failed to import project at row {}: repo={}",
+                            row, projectReview.getProjectGithubRepositoryUrl(), ex);
+                }
             }
 
             log.info("Project reviews import finished. Total parsed: {}", parsed);
@@ -94,5 +115,24 @@ public class ProjectReviewsImportService {
         }
 
         return String.valueOf(row.get(index)).trim();
+    }
+
+    private Long parseTimestamp(String dateStr) {
+        if (dateStr.isEmpty()) return null;
+
+        try {
+            dateStr = dateStr.replace('\u00A0', ' ').trim();
+
+            SimpleDateFormat sdf = new SimpleDateFormat("MMMM, yyyy", Locale.forLanguageTag("ru"));
+            sdf.setDateFormatSymbols(new DateFormatSymbols() {{
+                setMonths(RU_MONTHS);
+            }});
+            return sdf.parse(dateStr)
+                    .toInstant()
+                    .getEpochSecond();
+        } catch (Exception e) {
+            log.warn("Failed to parse date '{}': {}", dateStr, e.getMessage());
+            return Instant.now().getEpochSecond();
+        }
     }
 }
