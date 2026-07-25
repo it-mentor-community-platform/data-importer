@@ -18,14 +18,14 @@ import java.util.concurrent.Executors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ReviewImportService {
+public class GuaranteedReviewsImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
     private final ServiceHttpClient httpClient;
 
     private final ExecutorService executor =
-            Executors.newSingleThreadExecutor(r -> new Thread(r, "review-import-thread"));
+            Executors.newSingleThreadExecutor(r -> new Thread(r, "guaranteed-reviews-import-thread"));
 
     public void startImportAsync() {
         executor.submit(this::doImport);
@@ -35,8 +35,8 @@ public class ReviewImportService {
         log.info("Starting guaranteed reviews import...");
         try {
             List<List<Object>> rows = googleSheetsClient.readSheet(
-                    properties.getMentorSpreadsheetId(),
-                    properties.getSheetRangeReviews()
+                    properties.getGuaranteedReviewsSpreadsheetId(),
+                    properties.getSheetRangeGuaranteedReviews()
             );
             if (rows == null || rows.isEmpty()) {
                 log.warn("No data found in the specified range.");

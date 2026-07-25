@@ -77,4 +77,27 @@ public class MetricsConfig {
                 .publishPercentileHistogram()
                 .register(registry);
     }
+
+    @Bean
+    public Counter mentorImportSuccessCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_mentors_success_total")
+                .description("Total successfully imported mentors")
+                .register(registry);
+    }
+
+    @Bean
+    public Counter mentorImportErrorCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_mentors_error_total")
+                .description("Total failed mentor imports")
+                .register(registry);
+    }
+
+    @Bean
+    public Timer mentorImportDurationTimer(MeterRegistry registry) {
+        return Timer.builder("data_importer_mentors_import_duration_seconds")
+                .description("Time taken to complete mentors import in seconds")
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .publishPercentileHistogram()
+                .register(registry);
+    }
 }
