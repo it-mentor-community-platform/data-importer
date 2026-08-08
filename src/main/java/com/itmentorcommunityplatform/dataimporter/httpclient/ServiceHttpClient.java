@@ -4,6 +4,7 @@ import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.GuaranteedReviewRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProjectUpsertRequestDto;
+import com.itmentorcommunityplatform.dataimporter.dto.request.QuestionUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProjectReviewSheetsDto;
@@ -196,4 +197,49 @@ public class ServiceHttpClient {
             return null;
         }
     }
+
+    public void upsertQuestion(QuestionUpsertRequestDto requestDto) {
+        String uri = props.getIntervalRepetitionServiceBaseUrl() + "/api/interval-repetition/internal/question";
+
+        try {
+            webClient.post()
+                    .uri(uri)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .bodyValue(requestDto)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block(Duration.ofSeconds(10));
+
+            log.info(
+                    "Successfully upsert question in IntervalRepetitionService: specialization={}, category={}, title={}",
+                    requestDto.specialization(),
+                    requestDto.category(),
+                    requestDto.title()
+            );
+
+        } catch (WebClientResponseException wcre) {
+            log.error(
+                    "IntervalRepetitionService returned error. status={}, body={}, specialization={}, category={}, title={}",
+                    wcre.getStatusCode().value(),
+                    wcre.getResponseBodyAsString(),
+                    requestDto.specialization(),
+                    requestDto.category(),
+                    requestDto.title()
+            );
+
+            throw wcre;
+
+        } catch (Exception ex) {
+            log.error(
+                    "Failed upsert question in IntervalRepetitionService: specialization={}, category={}, title={}",
+                    requestDto.specialization(),
+                    requestDto.category(),
+                    requestDto.title(),
+                    ex
+            );
+        }
+
+    }
+
+
 }
