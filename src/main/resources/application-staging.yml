@@ -29,6 +29,12 @@ dataimporter:
   profile-service-base-url: "http://profile-service:8080"
   project-service-base-url: "http://project-service:8080"
   mentor-service-base-url: "http://mentor-service:8080"
+  interval-repetition-service-base-url: "http://interval-repetition-service:8080"
+  interview-question-sources:
+    - specialization: "Java Backend"
+      spreadsheet-id: ${JAVA_SPREADSHEET_ID}
+    - specialization: "Python Backend"
+      spreadsheet-id: ${PYTHON_SPREADSHEET_ID}
 
 management:
   endpoint:

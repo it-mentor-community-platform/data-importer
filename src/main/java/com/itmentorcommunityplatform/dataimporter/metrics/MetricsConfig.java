@@ -100,4 +100,28 @@ public class MetricsConfig {
                 .publishPercentileHistogram()
                 .register(registry);
     }
+
+    @Bean
+    public Counter questionsImportSuccessCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_questions_success_total")
+                .description("Total successfully imported questions")
+                .register(registry);
+    }
+
+    @Bean
+    public Counter questionsImportErrorCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_questions_error_total")
+                .description("Total failed questions imports")
+                .register(registry);
+    }
+
+    @Bean
+    public Timer questionsImportDurationTimer(MeterRegistry registry) {
+        return Timer.builder("data_importer_questions_import_duration_seconds")
+                .description("Time taken to complete questions import in seconds")
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .publishPercentileHistogram()
+                .register(registry);
+    }
+
 }
