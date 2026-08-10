@@ -131,7 +131,7 @@ public class MentorImportService {
                             tgId, name, tgUsername, languages, services, description);
 
                     try {
-                        httpClient.upsertMentor(mentor);
+                        httpClient.insertMentor(mentor);
                         mentorImportSuccessCounter.increment();
                         processed++;
 
