@@ -221,4 +221,47 @@ public class ServiceHttpClient {
             return null;
         }
     }
+
+    public void upsertQuestion(QuestionUpsertRequestDto requestDto) {
+        String uri = props.getIntervalRepetitionServiceBaseUrl() + "/api/interval-repetition/internal/question";
+
+        try {
+            webClient.post()
+                    .uri(uri)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .bodyValue(requestDto)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block(Duration.ofSeconds(10));
+
+            log.info(
+                    "Successfully upsert question in IntervalRepetitionService: specialization={}, category={}, title={}",
+                    requestDto.specialization(),
+                    requestDto.category(),
+                    requestDto.title()
+            );
+
+        } catch (WebClientResponseException wcre) {
+            log.error(
+                    "IntervalRepetitionService returned error. status={}, body={}, specialization={}, category={}, title={}",
+                    wcre.getStatusCode().value(),
+                    wcre.getResponseBodyAsString(),
+                    requestDto.specialization(),
+                    requestDto.category(),
+                    requestDto.title()
+            );
+
+            throw wcre;
+
+        } catch (Exception ex) {
+            log.error(
+                    "Failed upsert question in IntervalRepetitionService: specialization={}, category={}, title={}",
+                    requestDto.specialization(),
+                    requestDto.category(),
+                    requestDto.title(),
+                    ex
+            );
+        }
+
+    }
 }

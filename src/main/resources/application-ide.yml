@@ -22,6 +22,12 @@ dataimporter:
   profile-service-base-url: "http://localhost:8083"
   project-service-base-url: "http://localhost:8084"
   mentor-service-base-url: "http://localhost:8085"
+  interval-repetition-service-base-url: "http://localhost:8088"
+  interview-question-sources:
+    - specialization: "Java Backend"
+      spreadsheet-id: "1qGAtb_8VMLgv4jd4kZQLFn7IcN5uJmaMkyR80SPtdm0"
+    - specialization: "Python Backend"
+      spreadsheet-id: "12qGLrobmIut58pAkxktG3NQNeRQfFNwy2gPLDNJrClI"
 
 
 

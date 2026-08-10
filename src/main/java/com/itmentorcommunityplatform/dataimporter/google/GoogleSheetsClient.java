@@ -5,6 +5,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -110,4 +111,16 @@ public class GoogleSheetsClient {
             throw new RuntimeException("Failed to append to Google Sheets", e);
         }
     }
+
+    public List<String> getSheetNames(String spreadsheetId) throws IOException {
+        Spreadsheet spreadsheet = sheetsService.spreadsheets()
+                .get(spreadsheetId)
+                .setIncludeGridData(false)
+                .execute();
+
+        return spreadsheet.getSheets().stream()
+                .map(sheet -> sheet.getProperties().getTitle())
+                .toList();
+    }
+
 }
