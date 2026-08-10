@@ -1,11 +1,7 @@
 package com.itmentorcommunityplatform.dataimporter.httpclient;
 
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
-import com.itmentorcommunityplatform.dataimporter.dto.request.GuaranteedReviewRequestDto;
-import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
-import com.itmentorcommunityplatform.dataimporter.dto.request.ProjectUpsertRequestDto;
-import com.itmentorcommunityplatform.dataimporter.dto.request.QuestionUpsertRequestDto;
-import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
+import com.itmentorcommunityplatform.dataimporter.dto.request.*;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProjectReviewSheetsDto;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +43,34 @@ public class ServiceHttpClient {
         } catch (Exception ex) {
             log.error("Failed to call Auth Service for telegramId={}, error={}",
                     request.telegramUserId(), ex.getMessage(), ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public void insertMentor(MentorUpsertRequestDto request) {
+        String url = props.getMentorServiceBaseUrl() + "/api/mentor/internal/mentor";
+        try {
+            webClient.post()
+                    .uri(url)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .bodyValue(request)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block(Duration.ofSeconds(10));
+            log.info("Successfully inserted mentor in Mentor Service: telegramId={}, telegramUrl={}",
+                    request.mentorTelegramUserId(), request.telegramUrl());
+        } catch (WebClientResponseException wcre) {
+            if (wcre.getStatusCode().value() == 409) {
+                log.info("Mentor with telegramId={} already exist in Mentor Service",
+                        request.mentorTelegramUserId());
+                return;
+            }
+            log.error("Mentor Service returned error. status={}, body={}, telegramId={}",
+                    wcre.getStatusCode().value(), wcre.getResponseBodyAsString(), request.mentorTelegramUserId());
+            throw wcre;
+        } catch (Exception ex) {
+            log.error("Failed to call Mentor Service for telegramId={}, error={}",
+                    request.mentorTelegramUserId(), ex.getMessage(), ex);
             throw new RuntimeException(ex);
         }
     }
@@ -240,6 +264,4 @@ public class ServiceHttpClient {
         }
 
     }
-
-
 }

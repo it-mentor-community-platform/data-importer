@@ -1,7 +1,10 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
+import com.itmentorcommunityplatform.dataimporter.dto.request.MentorDescriptionDto;
+import com.itmentorcommunityplatform.dataimporter.dto.request.MentorUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,6 +26,7 @@ public class MentorImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
+    private final ServiceHttpClient httpClient;
 
     private final Counter mentorImportSuccessCounter;
     private final Counter mentorImportErrorCounter;
@@ -40,6 +45,9 @@ public class MentorImportService {
 
     private void doImport() {
         log.info("Starting mentor import (async)...");
+        int processed = 0;
+        int skippedDuplicates = 0;
+        int errors = 0;
         try {
             List<List<Object>> rows = googleSheetsClient.readSheet(properties.getMentorSpreadsheetId(),
                     properties.getSheetRangeMentors());
@@ -49,8 +57,7 @@ public class MentorImportService {
             }
 
             Set<Long> processedTelegramIds = new HashSet<>();
-            int processed = 0;
-            int skippedDuplicates = 0;
+
 
             for (int i = 0; i < rows.size(); i++) {
                 List<Object> row = rows.get(i);
@@ -84,25 +91,66 @@ public class MentorImportService {
 
                 try {
                     String name = row.get(2).toString().trim();
-                    String username = row.get(3).toString().trim();
+
+                    String tgUsername = row.get(3).toString().trim();
+                    String telegramUrl = "https://t.me/" + tgUsername;
+
                     String languagesRaw = String.valueOf(row.get(4)).trim();
-                    String[] languages = languagesRaw.split(",");
-                    String services = row.get(5).toString().trim();
+                    List<String> languages = Arrays.stream(
+                                    languagesRaw.split(","))
+                            .map(String::trim)
+                            .filter(language -> !language.isEmpty())
+                            .toList();
+
+                    String servicesRaw = row.get(5).toString().trim();
+                    List<String> services = Arrays.stream(
+                                    servicesRaw.split(","))
+                            .map(String::trim)
+                            .filter(service -> !service.isEmpty())
+                            .toList();
+
+                    String cost = row.get(6).toString().trim();
                     String description = row.get(7).toString().trim();
-                    
-                    for (String language : languages) {
-                        log.info("Mentor: telegramId={}, name={}, telegramUsername={}, language={}, services={}," +
+
+                    MentorDescriptionDto mentorDescriptionDto = new MentorDescriptionDto(
+                            name,
+                            cost,
+                            description
+                    );
+
+                    MentorUpsertRequestDto mentor = new MentorUpsertRequestDto(
+                            tgId,
+                            telegramUrl,
+                            mentorDescriptionDto,
+                            languages,
+                            services
+                    );
+
+                    log.info("Mentor is ready to import: telegramId={}, name={}, telegramUrl={}, languages={}, services={}," +
+                                    "description={}",
+                            tgId, name, tgUsername, languages, services, description);
+
+                    try {
+                        httpClient.insertMentor(mentor);
+                        mentorImportSuccessCounter.increment();
+                        processed++;
+
+                        log.info("Mentor: telegramId={}, name={}, telegramUsername={}, languages={}, services={}," +
                                         "description={}",
-                                tgId, name, username, language.trim(), services, description);
+                                tgId, name, tgUsername, languages, services, description);
+
+                    } catch (Exception ex) {
+                        mentorImportErrorCounter.increment();
+                        errors++;
+                        log.error("Failed to import mentor telegramId={}", tgId, ex);
                     }
-                    mentorImportSuccessCounter.increment();
-                    processed++;
                 } catch (Exception ex) {
                     mentorImportErrorCounter.increment();
                     log.error("Failed to import mentor telegramId={}", tgId, ex);
                 }
             }
-            log.info("Mentor import finished. Total processed mentors: {}. Skipped duplicates: {}", processed, skippedDuplicates);
+            log.info("Mentor import finished. Total processed mentors: {}. Skipped duplicates: {}. Errors: {}",
+                    processed, skippedDuplicates, errors);
         } catch (Exception e) {
             log.error("Failed to import mentors", e);
             mentorImportErrorCounter.increment();
