@@ -3,7 +3,7 @@ package com.itmentorcommunityplatform.dataimporter.service;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.QuestionUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
-import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.IntervalRepetitionServiceHttpClient;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class QuestionImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
-    private final ServiceHttpClient httpClient;
+    private final IntervalRepetitionServiceHttpClient httpClient;
 
     private final Counter questionsImportSuccessCounter;
     private final Counter questionsImportErrorCounter;

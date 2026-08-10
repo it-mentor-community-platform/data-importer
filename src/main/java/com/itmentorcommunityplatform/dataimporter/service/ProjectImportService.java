@@ -4,7 +4,8 @@ import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProjectUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
-import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.ProfileServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.ProjectServiceHttpClient;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,9 @@ import java.util.concurrent.Executors;
 public class ProjectImportService {
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
-    private final ServiceHttpClient httpClient;
+    private final ProjectServiceHttpClient projectServiceHttpClient;
+    private final ProfileServiceHttpClient profileServiceHttpClient;
+
 
     private final Counter projectImportSuccessCounter;
     private final Counter projectImportErrorCounter;
@@ -89,7 +92,7 @@ public class ProjectImportService {
                     continue;
                 }
 
-                ProfileByGithubResponseDto profile = httpClient
+                ProfileByGithubResponseDto profile = profileServiceHttpClient
                         .getProfileByGithubUrl(githubProfileLink);
 
                 if (profile == null || profile.telegramUserId() == null) {
@@ -113,7 +116,7 @@ public class ProjectImportService {
                 );
 
                 try {
-                    httpClient.upsertProject(requestDto);
+                    projectServiceHttpClient.upsertProject(requestDto);
                     processedProjects.add(githubRepositoryLink);
                     projectImportSuccessCounter.increment();
                     processed++;
