@@ -3,7 +3,8 @@ package com.itmentorcommunityplatform.dataimporter.service;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.GuaranteedReviewRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
-import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.MentorServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.ProfileServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.model.RoadmapProjectType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +23,8 @@ public class GuaranteedReviewsImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
-    private final ServiceHttpClient httpClient;
+    private final ProfileServiceHttpClient profileServiceHttpClient;
+    private final MentorServiceHttpClient mentorServiceHttpClient;
 
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "guaranteed-reviews-import-thread"));
@@ -70,7 +72,7 @@ public class GuaranteedReviewsImportService {
 
                 Long mentorTelegramId = mentorIdCache.computeIfAbsent(telegramUrl, url -> {
                     log.debug("Cache miss for {}, fetching ID from Profile Service", url);
-                    return httpClient.getTelegramUserIdByUrl(url);
+                    return profileServiceHttpClient.getTelegramUserIdByUrl(url);
                 });
 
                 if (mentorTelegramId == null) {
@@ -94,7 +96,7 @@ public class GuaranteedReviewsImportService {
                         log.info("Importing: Project={}, Mentor={}, Language={}, Price={}",
                                 projectType, telegramUrl, cleanLang, priceRaw);
 
-                        httpClient.upsertGuaranteedReview(new GuaranteedReviewRequestDto(
+                        mentorServiceHttpClient.upsertGuaranteedReview(new GuaranteedReviewRequestDto(
                                 telegramUrl, cleanLang, projectType, price
                         ), mentorTelegramId);
 

@@ -4,7 +4,7 @@ import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.MentorDescriptionDto;
 import com.itmentorcommunityplatform.dataimporter.dto.request.MentorUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
-import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.MentorServiceHttpClient;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ public class MentorImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
-    private final ServiceHttpClient httpClient;
+    private final MentorServiceHttpClient httpClient;
 
     private final Counter mentorImportSuccessCounter;
     private final Counter mentorImportErrorCounter;

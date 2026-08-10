@@ -3,7 +3,8 @@ package com.itmentorcommunityplatform.dataimporter.service;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProjectReviewSheetsDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
-import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.ProfileServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.ProjectServiceHttpClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,8 @@ public class ProjectReviewsImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
-    private final ServiceHttpClient httpClient;
+    private final ProfileServiceHttpClient profileServiceHttpClient;
+    private final ProjectServiceHttpClient projectServiceHttpClient;
 
     private static final String[] RU_MONTHS = {
             "январь", "февраль", "март", "апрель", "май", "июнь", "июль",
@@ -72,7 +74,7 @@ public class ProjectReviewsImportService {
 
                 Long mentorTelegramId = mentorIdCache.computeIfAbsent(reviewerTelegramProfileUrl, url -> {
                     log.debug("Cache miss for {}, fetching ID from Profile Service", url);
-                    return httpClient.getTelegramUserIdByUrl(url);
+                    return profileServiceHttpClient.getTelegramUserIdByUrl(url);
                 });
 
                 if (mentorTelegramId == null) {
@@ -89,7 +91,7 @@ public class ProjectReviewsImportService {
                         parseTimestamp(period)
                 );
                 try {
-                    httpClient.upsertProjectReview(projectReview);
+                    projectServiceHttpClient.upsertProjectReview(projectReview);
                     parsed++;
                     log.info("Parsed project review: {}", projectReview);
                 } catch (Exception ex) {
