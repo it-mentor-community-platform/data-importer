@@ -21,7 +21,7 @@ public class GuaranteedReviewsImportController implements GuaranteedReviewsImpor
     private final GuaranteedReviewImportService guaranteedReviewImportService;
 
     @PostMapping("/start-guaranteed-reviews-import")
-    public ResponseEntity<?> startGuaranteedReviewsImport(
+    public ResponseEntity<ImportStartResponseDto> startGuaranteedReviewsImport(
             @RequestHeader(value = "X-User-Roles", required = false) List<String> roles
     ) {
         RoleValidator.validateAdminRole(roles);

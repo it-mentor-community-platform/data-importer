@@ -46,7 +46,7 @@ public interface MentorImportApi {
                     )
             )
     })
-    ResponseEntity<?> startMentorsImport(
+    ResponseEntity<ImportStartResponseDto> startMentorsImport(
             @Parameter(
                     name = "X-User-Roles",
                     in = ParameterIn.HEADER,
