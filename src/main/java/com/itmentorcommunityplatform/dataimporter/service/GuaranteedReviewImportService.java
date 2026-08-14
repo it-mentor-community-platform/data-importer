@@ -6,6 +6,7 @@ import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.MentorServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProfileServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.model.RoadmapProjectType;
+import com.itmentorcommunityplatform.dataimporter.util.TelegramLinkUtil;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -62,7 +63,6 @@ public class GuaranteedReviewImportService {
 
             for (List<Object> row : rows) {
                 if (row == null || row.isEmpty()) {
-                    guaranteedReviewImportErrorCounter.increment();
                     continue;
                 }
 
@@ -75,7 +75,7 @@ public class GuaranteedReviewImportService {
                     currentProjectName = projectInRow;
                 }
 
-                String telegramUrl = tgUrlFromTgName(telegramRow);
+                String telegramUrl = TelegramLinkUtil.buildTelegramUrl(telegramRow);
 
                 if (telegramUrl.isEmpty() || languagesRaw.isEmpty()) {
                     guaranteedReviewImportErrorCounter.increment();
@@ -127,14 +127,6 @@ public class GuaranteedReviewImportService {
         } catch (Exception e) {
             log.error("Critical error during guaranteed reviews import", e);
         }
-    }
-
-    private String tgUrlFromTgName(String telegram) {
-        if (telegram == null || !telegram.contains("@")) {
-            return "";
-        }
-
-        return "https://t.me/" + telegram.substring(telegram.indexOf("@") + 1).trim();
     }
 
     private Integer parsePrice(String priceRaw) {
