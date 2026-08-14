@@ -33,6 +33,6 @@ POST http://localhost:8082/api/data-importer/start-guaranteed-reviews-import
 X-User-Roles: ADMIN
 
 ### 7. Question import
-POST http://localhost:8082/api/data-importer/start-question-import
+POST http://localhost:8082/api/data-importer/start-questions-import
 Content-Type: application/json
 X-User-Roles: ADMIN

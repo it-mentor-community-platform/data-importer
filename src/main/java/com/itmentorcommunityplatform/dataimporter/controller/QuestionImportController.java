@@ -21,7 +21,7 @@ public class QuestionImportController implements QuestionImportApi {
     private final QuestionImportService questionImportService;
 
     @Override
-    @PostMapping("/start-question-import")
+    @PostMapping("/start-questions-import")
     public ResponseEntity<ImportStartResponseDto> startQuestionImport(
             @RequestHeader(value = "X-User-Roles", required = false) List<String> roles) {
 
