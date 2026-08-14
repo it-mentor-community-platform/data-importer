@@ -5,10 +5,13 @@ import com.itmentorcommunityplatform.dataimporter.dto.request.MentorDescriptionD
 import com.itmentorcommunityplatform.dataimporter.dto.request.MentorUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.MentorServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.util.TelegramLinkUtil;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -108,8 +111,7 @@ public class MentorImportService {
         String name = row.get(2).toString().trim();
 
         String tgUsername = row.get(3).toString().trim();
-        tgUsername = tgUsername.charAt(0) == '@' ? tgUsername.substring(1) : tgUsername;
-        String telegramUrl = "https://t.me/" + tgUsername;
+        String telegramUrl = TelegramLinkUtil.buildTelegramUrl(tgUsername);
 
         String languagesRaw = String.valueOf(row.get(4)).trim();
         List<String> languages = getListFromCommaSeparatedString(languagesRaw);
