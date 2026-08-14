@@ -17,7 +17,7 @@ public final class TelegramLinkUtil {
             throw new IllegalArgumentException("tgUsername must not be blank");
         }
 
-        if(tgUsername.contains(PREFIX_TG_USERNAME)){
+        if (tgUsername.contains(PREFIX_TG_USERNAME)) {
             tgUsername = tgUsername.substring(tgUsername.indexOf(PREFIX_TG_USERNAME) + 1);
         }
 
