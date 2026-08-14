@@ -2,7 +2,7 @@ package com.itmentorcommunityplatform.dataimporter.controller;
 
 import com.itmentorcommunityplatform.dataimporter.controller.api.ProjectReviewsImportApi;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportStartResponseDto;
-import com.itmentorcommunityplatform.dataimporter.service.ProjectReviewsImportService;
+import com.itmentorcommunityplatform.dataimporter.service.ProjectReviewImportService;
 import com.itmentorcommunityplatform.dataimporter.validator.RoleValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProjectReviewsImportController implements ProjectReviewsImportApi {
 
-    private final ProjectReviewsImportService projectReviewsImportService;
+    private final ProjectReviewImportService projectReviewImportService;
 
     @Override
     @PostMapping("/start-reviews-import")
@@ -27,7 +27,7 @@ public class ProjectReviewsImportController implements ProjectReviewsImportApi {
     ) {
         RoleValidator.validateAdminRole(roles);
 
-        projectReviewsImportService.startImportAsync();
+        projectReviewImportService.startImportAsync();
 
         return ResponseEntity.ok(new ImportStartResponseDto("import_started"));
     }

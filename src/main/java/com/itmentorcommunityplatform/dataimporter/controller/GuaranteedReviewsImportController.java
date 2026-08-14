@@ -2,7 +2,7 @@ package com.itmentorcommunityplatform.dataimporter.controller;
 
 import com.itmentorcommunityplatform.dataimporter.controller.api.GuaranteedReviewsImportApi;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportStartResponseDto;
-import com.itmentorcommunityplatform.dataimporter.service.GuaranteedReviewsImportService;
+import com.itmentorcommunityplatform.dataimporter.service.GuaranteedReviewImportService;
 import com.itmentorcommunityplatform.dataimporter.validator.RoleValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequestMapping("/api/data-importer")
 public class GuaranteedReviewsImportController implements GuaranteedReviewsImportApi {
 
-    private final GuaranteedReviewsImportService guaranteedReviewsImportService;
+    private final GuaranteedReviewImportService guaranteedReviewImportService;
 
     @PostMapping("/start-guaranteed-reviews-import")
     public ResponseEntity<?> startGuaranteedReviewsImport(
@@ -26,7 +26,7 @@ public class GuaranteedReviewsImportController implements GuaranteedReviewsImpor
     ) {
         RoleValidator.validateAdminRole(roles);
 
-        guaranteedReviewsImportService.startImportAsync();
+        guaranteedReviewImportService.startImportAsync();
 
         return ResponseEntity.ok(new ImportStartResponseDto("import_started"));
     }
