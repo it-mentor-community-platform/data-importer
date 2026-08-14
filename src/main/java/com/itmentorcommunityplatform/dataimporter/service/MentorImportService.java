@@ -108,6 +108,7 @@ public class MentorImportService {
         String name = row.get(2).toString().trim();
 
         String tgUsername = row.get(3).toString().trim();
+        tgUsername = tgUsername.charAt(0) == '@' ? tgUsername.substring(1) : tgUsername;
         String telegramUrl = "https://t.me/" + tgUsername;
 
         String languagesRaw = String.valueOf(row.get(4)).trim();
