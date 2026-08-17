@@ -26,7 +26,7 @@ public class ProfileServiceHttpClient {
     public void upsertProfile(ProfileUpsertRequestDto request) {
         String url = props.getProfileServiceBaseUrl() + "/api/profile/internal/profile";
         try {
-            webClient.post()
+            webClient.put()
                     .uri(url)
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .bodyValue(request)
