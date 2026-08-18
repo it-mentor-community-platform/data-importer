@@ -22,7 +22,7 @@ public class UserImportController implements UserImportApi {
 
     @Override
     @PostMapping("/start-users-import")
-    public ResponseEntity<?> startUsersImport(
+    public ResponseEntity<ImportStartResponseDto> startUsersImport(
             @RequestHeader(value = "X-User-Roles", required = false) List<String> roles) {
 
         RoleValidator.validateAdminRole(roles);

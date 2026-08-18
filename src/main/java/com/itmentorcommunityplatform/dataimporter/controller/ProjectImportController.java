@@ -21,7 +21,7 @@ public class ProjectImportController implements ProjectImportApi {
 
     @Override
     @PostMapping("/start-projects-import")
-    public ResponseEntity<?> startProjectImport(
+    public ResponseEntity<ImportStartResponseDto> startProjectImport(
             @RequestHeader(value = "X-User-Roles", required = false) List<String> roles) {
 
         RoleValidator.validateAdminRole(roles);

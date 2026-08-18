@@ -47,7 +47,7 @@ public interface GuaranteedReviewsImportApi {
                     )
             )
     })
-    ResponseEntity<?> startGuaranteedReviewsImport(
+    ResponseEntity<ImportStartResponseDto> startGuaranteedReviewsImport(
             @Parameter(
                     name = "X-User-Roles",
                     in = ParameterIn.HEADER,

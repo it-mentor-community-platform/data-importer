@@ -55,7 +55,7 @@ public interface ProfileImportApi {
                     )
             )
     })
-    ResponseEntity<?> startProfileImport(
+    ResponseEntity<ImportStartResponseDto> startProfileImport(
             @Parameter(
                     name = "X-User-Roles",
                     in = ParameterIn.HEADER,

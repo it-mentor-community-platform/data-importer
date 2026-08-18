@@ -48,7 +48,7 @@ public interface QuestionImportApi {
                     )
             )
     })
-    ResponseEntity<?> startQuestionImport(
+    ResponseEntity<ImportStartResponseDto> startQuestionImport(
             @Parameter(
                     name = "X-User-Roles",
                     in = ParameterIn.HEADER,

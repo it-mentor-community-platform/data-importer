@@ -22,7 +22,7 @@ public class MentorImportController implements MentorImportApi {
 
     @Override
     @PostMapping("/start-mentors-import")
-    public ResponseEntity<?> startMentorsImport(
+    public ResponseEntity<ImportStartResponseDto> startMentorsImport(
             @RequestHeader(value = "X-User-Roles", required = false) List<String> roles) {
         RoleValidator.validateAdminRole(roles);
         importService.startImportAsync();

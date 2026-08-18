@@ -6,6 +6,9 @@ import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.MentorServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProfileServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.model.RoadmapProjectType;
+import com.itmentorcommunityplatform.dataimporter.util.TelegramLinkUtil;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,18 +22,26 @@ import java.util.concurrent.Executors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class GuaranteedReviewsImportService {
+public class GuaranteedReviewImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
     private final ProfileServiceHttpClient profileServiceHttpClient;
     private final MentorServiceHttpClient mentorServiceHttpClient;
 
+    private final Counter guaranteedReviewImportSuccessCounter;
+    private final Counter guaranteedReviewImportErrorCounter;
+    private final Timer guaranteedReviewImportDurationTimer;
+
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "guaranteed-reviews-import-thread"));
 
     public void startImportAsync() {
-        executor.submit(this::doImport);
+        executor.submit(this::doImportMeasured);
+    }
+
+    private void doImportMeasured() {
+        guaranteedReviewImportDurationTimer.record(this::doImport);
     }
 
     private void doImport() {
@@ -64,9 +75,10 @@ public class GuaranteedReviewsImportService {
                     currentProjectName = projectInRow;
                 }
 
-                String telegramUrl = tgUrlFromTgName(telegramRow);
+                String telegramUrl = TelegramLinkUtil.buildTelegramUrl(telegramRow);
 
                 if (telegramUrl.isEmpty() || languagesRaw.isEmpty()) {
+                    guaranteedReviewImportErrorCounter.increment();
                     continue;
                 }
 
@@ -78,6 +90,7 @@ public class GuaranteedReviewsImportService {
                 if (mentorTelegramId == null) {
                     log.warn("Skip: Mentor with url {} not found in Profile Service", telegramUrl);
                     mentorIdCache.remove(telegramUrl);
+                    guaranteedReviewImportErrorCounter.increment();
                     continue;
                 }
 
@@ -87,6 +100,7 @@ public class GuaranteedReviewsImportService {
                 for (String lang : languages) {
                     String cleanLang = lang.trim();
                     if (cleanLang.isEmpty()) {
+                        guaranteedReviewImportErrorCounter.increment();
                         continue;
                     }
 
@@ -101,9 +115,11 @@ public class GuaranteedReviewsImportService {
                         ), mentorTelegramId);
 
                         totalImportedCount++;
+                        guaranteedReviewImportSuccessCounter.increment();
                     } catch (Exception e) {
                         log.error("Failed to import review for mentor {} (lang: {}): {}",
                                 telegramUrl, cleanLang, e.getMessage());
+                        guaranteedReviewImportErrorCounter.increment();
                     }
                 }
             }
@@ -111,14 +127,6 @@ public class GuaranteedReviewsImportService {
         } catch (Exception e) {
             log.error("Critical error during guaranteed reviews import", e);
         }
-    }
-
-    private String tgUrlFromTgName(String telegram) {
-        if (telegram == null || !telegram.contains("@")) {
-            return "";
-        }
-
-        return "https://t.me/" + telegram.substring(telegram.indexOf("@") + 1).trim();
     }
 
     private Integer parsePrice(String priceRaw) {

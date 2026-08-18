@@ -5,6 +5,8 @@ import com.itmentorcommunityplatform.dataimporter.dto.response.ProjectReviewShee
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProfileServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProjectServiceHttpClient;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +25,7 @@ import java.util.concurrent.Executors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ProjectReviewsImportService {
+public class ProjectReviewImportService {
 
     private static final int REVIEW_SHEET_COLUMNS_COUNT = 9;
 
@@ -31,6 +33,10 @@ public class ProjectReviewsImportService {
     private final DataImporterProperties properties;
     private final ProfileServiceHttpClient profileServiceHttpClient;
     private final ProjectServiceHttpClient projectServiceHttpClient;
+
+    private final Counter projectReviewImportSuccessCounter;
+    private final Counter projectReviewImportErrorCounter;
+    private final Timer projectReviewImportDurationTimer;
 
     private static final String[] RU_MONTHS = {
             "январь", "февраль", "март", "апрель", "май", "июнь", "июль",
@@ -41,7 +47,11 @@ public class ProjectReviewsImportService {
             Executors.newSingleThreadExecutor(r -> new Thread(r, "project-reviews-import-thread"));
 
     public void startImportAsync() {
-        executor.submit(this::doImport);
+        executor.submit(this::doImportMeasured);
+    }
+
+    private void doImportMeasured() {
+        projectReviewImportDurationTimer.record(this::doImport);
     }
 
     private void doImport() {
@@ -64,6 +74,7 @@ public class ProjectReviewsImportService {
             for (List<Object> row : rows) {
                 if (row == null || row.size() < REVIEW_SHEET_COLUMNS_COUNT) {
                     log.debug("Skipping service row: {}", row);
+                    projectReviewImportErrorCounter.increment();
                     continue;
                 }
 
@@ -80,8 +91,8 @@ public class ProjectReviewsImportService {
                 if (mentorTelegramId == null) {
                     log.warn("Skip: Mentor with url {} not found in Profile Service", reviewerTelegramProfileUrl);
                     mentorIdCache.remove(reviewerTelegramProfileUrl);
+                    projectReviewImportErrorCounter.increment();
                     continue;
-
                 }
 
                 ProjectReviewSheetsDto projectReview = new ProjectReviewSheetsDto(
@@ -94,9 +105,11 @@ public class ProjectReviewsImportService {
                     projectServiceHttpClient.upsertProjectReview(projectReview);
                     parsed++;
                     log.info("Parsed project review: {}", projectReview);
+                    projectReviewImportSuccessCounter.increment();
                 } catch (Exception ex) {
                     log.error("Failed to import project at row {}: repo={}",
                             row, projectReview.getProjectGithubRepositoryUrl(), ex);
+                    projectReviewImportErrorCounter.increment();
                 }
             }
 
