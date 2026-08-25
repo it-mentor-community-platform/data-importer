@@ -1,0 +1,94 @@
+package com.itmentorcommunityplatform.dataimporter.httpclient;
+
+import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
+import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
+import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
+import java.time.Duration;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class ProfileServiceHttpClient {
+
+    private final DataImporterProperties props;
+    private final WebClient webClient;
+
+    public void upsertProfile(ProfileUpsertRequestDto request) {
+        String url = props.getProfileServiceBaseUrl() + "/api/profile/internal/profile";
+        try {
+            webClient.put()
+                    .uri(url)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .bodyValue(request)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block(Duration.ofSeconds(10));
+            log.info("Successfully upserted profile in Profile Service: telegramId={}, details={}",
+                    request.telegramUserId(), request.details().toString().substring(10));
+        } catch (WebClientResponseException wcre) {
+            log.error("Profile Service returned error. status={}, body={}, telegramId={}",
+                    wcre.getStatusCode().value(), wcre.getResponseBodyAsString(), request.telegramUserId());
+            throw wcre;
+        } catch (Exception ex) {
+            log.error("Failed to call Profile Service for telegramId={}, error={}",
+                    request.telegramUserId(), ex.getMessage(), ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public ProfileByGithubResponseDto getProfileByGithubUrl(String githubProfileUrl) {
+
+        String url = UriComponentsBuilder
+                .fromUri(URI.create(props.getProfileServiceBaseUrl()))
+                .path("/api/profile/internal/profile/by-github-profile-url")
+                .queryParam("url", githubProfileUrl)
+                .toUriString();
+
+        try {
+            ProfileByGithubResponseDto response = webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(ProfileByGithubResponseDto.class)
+                    .block(Duration.ofSeconds(10));
+
+            log.info("Fetched OK for GitHub URL: {}", githubProfileUrl);
+            return response;
+
+        } catch (Exception ex) {
+            log.error("Failed. url={}, error={}", githubProfileUrl, ex.getMessage());
+            return null;
+        }
+    }
+
+    public Long getTelegramUserIdByUrl(String telegramUrl) {
+        String url = UriComponentsBuilder
+                .fromUri(URI.create(props.getProfileServiceBaseUrl()))
+                .path("/api/profile/internal/profile/by-telegram-url")
+                .queryParam("url", telegramUrl)
+                .toUriString();
+
+        try {
+            ProfileByGithubResponseDto response = webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(ProfileByGithubResponseDto.class)
+                    .block(Duration.ofSeconds(5));
+
+            return response != null ? response.telegramUserId() : null;
+
+        } catch (Exception ex) {
+            log.error("Failed to find profile for telegramUrl={}, error={}", telegramUrl, ex.getMessage());
+            return null;
+        }
+    }
+}

@@ -14,12 +14,11 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
-@Tag(name = "User Import", description = "API for managing user imports")
-public interface UserImportApi {
-
+@Tag(name = "Mentor Import", description = "API for managing mentor imports")
+public interface MentorImportApi {
     @Operation(
-            summary = "Starting user import",
-            description = "Asynchronously starts the process of reading the Google Spreadsheet and creating/updating users in the Auth Service."
+            summary = "Starting mentor import",
+            description = "Asynchronously starts the process of reading the Google Spreadsheet and logging mentor data."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -47,7 +46,7 @@ public interface UserImportApi {
                     )
             )
     })
-    ResponseEntity<ImportStartResponseDto> startUsersImport(
+    ResponseEntity<ImportStartResponseDto> startMentorsImport(
             @Parameter(
                     name = "X-User-Roles",
                     in = ParameterIn.HEADER,
@@ -57,4 +56,7 @@ public interface UserImportApi {
             )
             List<String> roles
     );
+
 }
+
+

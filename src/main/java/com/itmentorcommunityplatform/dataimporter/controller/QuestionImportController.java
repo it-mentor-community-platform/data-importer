@@ -1,8 +1,8 @@
 package com.itmentorcommunityplatform.dataimporter.controller;
 
-import com.itmentorcommunityplatform.dataimporter.controller.api.GuaranteedReviewsImportApi;
+import com.itmentorcommunityplatform.dataimporter.controller.api.QuestionImportApi;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportStartResponseDto;
-import com.itmentorcommunityplatform.dataimporter.service.ReviewImportService;
+import com.itmentorcommunityplatform.dataimporter.service.QuestionImportService;
 import com.itmentorcommunityplatform.dataimporter.validator.RoleValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,20 +14,21 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/data-importer")
-public class ReviewImportController implements GuaranteedReviewsImportApi {
+@RequiredArgsConstructor
+public class QuestionImportController implements QuestionImportApi {
 
-    private final ReviewImportService reviewImportService;
+    private final QuestionImportService questionImportService;
 
-    @PostMapping("/start-guaranteed-reviews-import")
-    public ResponseEntity<?> startGuaranteedReviewsImport(
-            @RequestHeader(value = "X-User-Roles", required = false) List<String> roles
-    ) {
+    @Override
+    @PostMapping("/start-questions-import")
+    public ResponseEntity<ImportStartResponseDto> startQuestionImport(
+            @RequestHeader(value = "X-User-Roles", required = false) List<String> roles) {
+
         RoleValidator.validateAdminRole(roles);
-
-        reviewImportService.startImportAsync();
+        questionImportService.startImportAsync();
 
         return ResponseEntity.ok(new ImportStartResponseDto("import_started"));
     }
+
 }

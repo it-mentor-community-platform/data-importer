@@ -3,7 +3,7 @@ package com.itmentorcommunityplatform.dataimporter.service;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.UserUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
-import com.itmentorcommunityplatform.dataimporter.httpclient.ServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.httpclient.AuthServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.model.UserRole;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
@@ -25,8 +25,7 @@ public class UserImportService {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
-    private final ServiceHttpClient httpClient;
-
+    private final AuthServiceHttpClient httpClient;
     private final Counter usersImportSuccessCounter;
     private final Counter usersImportErrorCounter;
     private final Timer usersImportDurationTimer;

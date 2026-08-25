@@ -1,8 +1,8 @@
 package com.itmentorcommunityplatform.dataimporter.controller;
 
-import com.itmentorcommunityplatform.dataimporter.controller.api.UserImportApi;
+import com.itmentorcommunityplatform.dataimporter.controller.api.MentorImportApi;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportStartResponseDto;
-import com.itmentorcommunityplatform.dataimporter.service.UserImportService;
+import com.itmentorcommunityplatform.dataimporter.service.MentorImportService;
 import com.itmentorcommunityplatform.dataimporter.validator.RoleValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,19 +16,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/data-importer")
 @RequiredArgsConstructor
-public class UserImportController implements UserImportApi {
+public class MentorImportController implements MentorImportApi {
 
-    private final UserImportService importService;
+    private final MentorImportService importService;
 
     @Override
-    @PostMapping("/start-users-import")
-    public ResponseEntity<ImportStartResponseDto> startUsersImport(
+    @PostMapping("/start-mentors-import")
+    public ResponseEntity<ImportStartResponseDto> startMentorsImport(
             @RequestHeader(value = "X-User-Roles", required = false) List<String> roles) {
-
         RoleValidator.validateAdminRole(roles);
-
         importService.startImportAsync();
-
         return ResponseEntity.ok(new ImportStartResponseDto("import_started"));
     }
 }

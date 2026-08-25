@@ -11,14 +11,24 @@ spring:
 
 dataimporter:
   project-spreadsheet-id: "1Ya7J-nsc2m4D9MuiDbauypL7yWocHGoJj9P7tVimxp8"
-  mentor-spreadsheet-id: "1oP6a4wcItGOlbD6OYpV-u5Z1jFJAhLEq-llOZSHP414" # локальная таблца
+  mentor-spreadsheet-id: "1C0o5aOiUWoRQVOE3l9xmFg-28p06-N_ZzHScXWxz9hw"
+  guaranteed-reviews-spreadsheet-id: "1eDvqa_XR7BvMBTVjnIntCP6EDkj9diKhHLE_DS6B3zc"
   sheet-range-telegram-accounts: "Telegram аккаунты студентов!A2:C"
   sheet-range-projects: "Projects!A3:I"
-  sheet-range-reviews: "B7:E"
+  sheet-range-guaranteed-reviews: "B7:E"
+  sheet-range-project-reviews: "Reviews!A2:I"
+  sheet-range-mentors: "Менторы!A5:L"
   auth-service-base-url: "http://localhost:8081"
   profile-service-base-url: "http://localhost:8083"
   project-service-base-url: "http://localhost:8084"
   mentor-service-base-url: "http://localhost:8085"
+  interval-repetition-service-base-url: "http://localhost:8088"
+  interview-question-sources:
+    - specialization: "Java Backend"
+      spreadsheet-id: "1qGAtb_8VMLgv4jd4kZQLFn7IcN5uJmaMkyR80SPtdm0"
+    - specialization: "Python Backend"
+      spreadsheet-id: "12qGLrobmIut58pAkxktG3NQNeRQfFNwy2gPLDNJrClI"
+
 
 
 server:

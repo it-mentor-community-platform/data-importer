@@ -77,4 +77,97 @@ public class MetricsConfig {
                 .publishPercentileHistogram()
                 .register(registry);
     }
+
+    @Bean
+    public Counter projectReviewImportSuccessCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_reviews_success_total")
+                .description("Total successfully imported reviews")
+                .register(registry);
+    }
+
+    @Bean
+    public Counter projectReviewImportErrorCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_reviews_error_total")
+                .description("Total failed reviews imports")
+                .register(registry);
+    }
+
+    @Bean
+    public Timer projectReviewImportDurationTimer(MeterRegistry registry) {
+        return Timer.builder("data_importer_reviews_import_duration_seconds")
+                .description("Time taken to complete reviews import in seconds")
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .publishPercentileHistogram()
+                .register(registry);
+    }
+
+    @Bean
+    public Counter guaranteedReviewImportSuccessCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_guaranteed_reviews_success_total")
+                .description("Total successfully imported guaranteed reviews")
+                .register(registry);
+    }
+
+    @Bean
+    public Counter guaranteedReviewImportErrorCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_guaranteed_reviews_error_total")
+                .description("Total failed guaranteed reviews imports")
+                .register(registry);
+    }
+
+    @Bean
+    public Timer guaranteedReviewImportDurationTimer(MeterRegistry registry) {
+        return Timer.builder("data_importer_guaranteed_reviews_import_duration_seconds")
+                .description("Time taken to complete guaranteed reviews import in seconds")
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .publishPercentileHistogram()
+                .register(registry);
+    }
+
+    @Bean
+    public Counter mentorImportSuccessCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_mentors_success_total")
+                .description("Total successfully imported mentors")
+                .register(registry);
+    }
+
+    @Bean
+    public Counter mentorImportErrorCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_mentors_error_total")
+                .description("Total failed mentor imports")
+                .register(registry);
+    }
+
+    @Bean
+    public Timer mentorImportDurationTimer(MeterRegistry registry) {
+        return Timer.builder("data_importer_mentors_import_duration_seconds")
+                .description("Time taken to complete mentors import in seconds")
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .publishPercentileHistogram()
+                .register(registry);
+    }
+
+    @Bean
+    public Counter questionsImportSuccessCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_questions_success_total")
+                .description("Total successfully imported questions")
+                .register(registry);
+    }
+
+    @Bean
+    public Counter questionsImportErrorCounter(MeterRegistry registry) {
+        return Counter.builder("data_importer_questions_error_total")
+                .description("Total failed questions imports")
+                .register(registry);
+    }
+
+    @Bean
+    public Timer questionsImportDurationTimer(MeterRegistry registry) {
+        return Timer.builder("data_importer_questions_import_duration_seconds")
+                .description("Time taken to complete questions import in seconds")
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .publishPercentileHistogram()
+                .register(registry);
+    }
+
 }

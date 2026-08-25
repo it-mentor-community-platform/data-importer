@@ -1,0 +1,38 @@
+### 1. Users import
+POST http://localhost:8082/api/data-importer/start-users-import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+### 2. Profiles import
+POST http://localhost:8082/api/data-importer/start-profiles-import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+### 3. Mentors import
+# Depends on: 2. Profiles import
+POST http://localhost:8082/api/data-importer/start-mentors-import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+### 4. Project import
+# Depends on: 2. Profiles import
+POST http://localhost:8082/api/data-importer/start-projects-import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+### 5. Project-reviews import
+# Depends on: 2. Profiles import
+POST http://localhost:8082/api/data-importer/start-reviews-import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+### 6. Guranteed-reviews import
+# Depends on: 2. Profiles import
+# Depends on: 3. Mentors import
+POST http://localhost:8082/api/data-importer/start-guaranteed-reviews-import
+X-User-Roles: ADMIN
+
+### 7. Question import
+POST http://localhost:8082/api/data-importer/start-questions-import
+Content-Type: application/json
+X-User-Roles: ADMIN

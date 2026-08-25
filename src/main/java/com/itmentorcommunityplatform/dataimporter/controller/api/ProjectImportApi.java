@@ -47,7 +47,7 @@ public interface ProjectImportApi {
                     )
             )
     })
-    ResponseEntity<?> startProjectImport(
+    ResponseEntity<ImportStartResponseDto> startProjectImport(
             @Parameter(
                     name = "X-User-Roles",
                     in = ParameterIn.HEADER,

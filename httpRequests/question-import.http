@@ -1,0 +1,9 @@
+### Successful start - admin role
+POST http://localhost:8082/api/data-importer/start-questions-import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+### Unsccessful start - not admin role
+POST http://localhost:8082/api/data-importer/start-questions-import
+Content-Type: application/json
+X-User-Roles: STUDENT

@@ -1,5 +1,6 @@
 package com.itmentorcommunityplatform.dataimporter.controller.api;
 
+
 import com.itmentorcommunityplatform.dataimporter.dto.response.ErrorResponseDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportStartResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,12 +15,12 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
-@Tag(name = "User Import", description = "API for managing user imports")
-public interface UserImportApi {
+@Tag(name = "Questions Import", description = "API for managing questions imports")
+public interface QuestionImportApi {
 
     @Operation(
-            summary = "Starting user import",
-            description = "Asynchronously starts the process of reading the Google Spreadsheet and creating/updating users in the Auth Service."
+            summary = "Starting question import",
+            description = "Asynchronously starts the process of reading the Google Spreadsheet and creating/updating questions in the Interval Repetition Service."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -47,7 +48,7 @@ public interface UserImportApi {
                     )
             )
     })
-    ResponseEntity<ImportStartResponseDto> startUsersImport(
+    ResponseEntity<ImportStartResponseDto> startQuestionImport(
             @Parameter(
                     name = "X-User-Roles",
                     in = ParameterIn.HEADER,
@@ -57,4 +58,5 @@ public interface UserImportApi {
             )
             List<String> roles
     );
+
 }
