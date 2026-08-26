@@ -37,6 +37,13 @@ management:
     health:
       show-details: when_authorized
 
+dataimporter:
+  sheet-range-telegram-accounts: "Telegram аккаунты студентов!A2:C"
+  sheet-range-projects: "Projects!A3:I"
+  sheet-range-guaranteed-reviews: "B7:E"
+  sheet-range-project-reviews: "Reviews!A2:I"
+  sheet-range-mentors: "Менторы!A5:L"  
+
 google:
   credentials:
     json: ${GOOGLE_APPLICATION_CREDENTIALS_JSON:}
