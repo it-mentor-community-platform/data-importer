@@ -47,3 +47,4 @@ dataimporter:
 google:
   credentials:
     json: ${GOOGLE_APPLICATION_CREDENTIALS_JSON:}
+
