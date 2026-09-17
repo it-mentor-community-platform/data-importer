@@ -17,6 +17,9 @@ public class ProjectReviewSheetsDto {
     @JsonProperty("reviewer_telegram_user_id")
     private Long reviewerTelegramUserId;
 
+    @JsonProperty("reviewer_telegram_profile_url")
+    private String reviewerTelegramProfileUrl;
+
     @JsonProperty("added_timestamp")
     private Long addedTimestamp;
 }

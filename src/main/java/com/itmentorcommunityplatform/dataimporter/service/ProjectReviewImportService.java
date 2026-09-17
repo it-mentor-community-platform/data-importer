@@ -99,6 +99,7 @@ public class ProjectReviewImportService {
                         githubRepositoryUrl,
                         reviewUrl,
                         mentorTelegramId,
+                        reviewerTelegramProfileUrl,
                         parseTimestamp(period)
                 );
                 try {
