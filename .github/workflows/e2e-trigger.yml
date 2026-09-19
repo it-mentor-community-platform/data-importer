@@ -40,7 +40,7 @@ jobs:
           github_token: '${{ secrets.E2E_TRIGGER_TOKEN }}'
           workflow_file_name: ci.yml
           ref: dev
-          client-payload: |
+          client_payload: |
             {
               "data_importer_tag": "sha-${{ steps.vars.outputs.sha_short }}"
             }
