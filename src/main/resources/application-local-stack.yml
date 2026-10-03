@@ -5,8 +5,11 @@ spring:
 
   kafka:
     bootstrap-servers: kafka:9092
+    consumer:
+      group-id: data-importer-cg
     topic:
       projects-project-created: projects.project.created
+      reviews-review-created: reviews.review.created
 
 server:
   port: 8080

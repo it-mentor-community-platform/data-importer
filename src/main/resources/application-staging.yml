@@ -11,8 +11,11 @@ spring:
       sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
       ssl.truststore.type: ${KAFKA_SSL_TRUSTSTORE_TYPE}
       ssl.truststore.location: ${KAFKA_SSL_TRUSTSTORE_LOCATION}
+    consumer:
+      group-id: data-importer-cg
     topic:
       projects-project-created: staging.projects.project.created
+      reviews-review-created: staging.reviews.review.created
 
 server:
   port: 8080
