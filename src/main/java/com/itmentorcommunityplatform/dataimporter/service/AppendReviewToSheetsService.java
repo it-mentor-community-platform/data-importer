@@ -34,7 +34,9 @@ public class AppendReviewToSheetsService {
             ProfileByTelegramDataResponse response
                     = profileServiceHttpClient.getProfileByTelegramUrl(telegramProfileUrl);
 
-            validateProfileData(telegramProfileUrl, response);
+            validateProfileUrl(telegramProfileUrl, response);
+
+            String firstName = checkAndCorrectFirstName(response);
 
             String telegramUri = response.details().telegramUrl();
             String shortTgName = extractTelegramUsername(telegramUri);
@@ -44,17 +46,16 @@ public class AppendReviewToSheetsService {
                             buildReviewSheetRow(
                                     reviewCreatedEvent,
                                     REVIEW_TYPE,
-                                    response.details().firstName(),
+                                    firstName,
                                     shortTgName,
                                     telegramUri
                             )
                     );
 
-            //toDo разобраться с гуглТаблицами
             googleSheetsClient.addReviewToSheets(valueRange);
         } catch (IllegalArgumentException illegalArgumentException) {
             log.error(
-                    "Failed to append review to Google Sheets: reviewUrl={}, reason={}",
+                    "Invalid review author data: reviewUrl={}, reason={}",
                     reviewCreatedEvent.url(),
                     illegalArgumentException.getMessage(),
                     illegalArgumentException
@@ -64,11 +65,9 @@ public class AppendReviewToSheetsService {
         }
     }
 
-    private void validateProfileData(String telegramUrl, ProfileByTelegramDataResponse response) {
+    private void validateProfileUrl(String telegramUrl, ProfileByTelegramDataResponse response) {
         if (response == null
                 || response.details() == null
-                || response.details().firstName() == null
-                || response.details().firstName().isBlank()
                 || response.details().telegramUrl() == null
                 || response.details().telegramUrl().isBlank()
         ) {
@@ -76,6 +75,11 @@ public class AppendReviewToSheetsService {
                     "Profile data not found for Telegram = " + telegramUrl
             );
         }
+    }
+
+    private String checkAndCorrectFirstName(ProfileByTelegramDataResponse response) {
+        String firstName = response.details().firstName();
+        return firstName == null || firstName.isBlank() ? "-" : firstName;
     }
 
     private List<List<Object>> buildReviewSheetRow(

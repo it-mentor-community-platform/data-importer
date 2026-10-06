@@ -112,6 +112,27 @@ public class GoogleSheetsClient {
         }
     }
 
+    public void addReviewToSheets(ValueRange range) {
+
+        try {
+            sheetsService.spreadsheets()
+                    .values()
+                    .append(props.getProjectSpreadsheetId(), props.getSheetRangeProjectReviews(), range)
+                    .setValueInputOption("USER_ENTERED")
+                    .execute();
+
+            log.info("[Sheets] The review has been successfully added to the google sheet");
+
+        } catch (Exception e) {
+            log.error("[Sheets] Failed to append row spreadsheetId={}, range={}, reason={} ",
+                    props.getProjectSpreadsheetId(),
+                    props.getSheetRangeProjectReviews(),
+                    e.getMessage());
+
+            throw new RuntimeException("Failed to append to Google Sheets", e);
+        }
+    }
+
     public List<String> getSheetNames(String spreadsheetId) throws IOException {
         Spreadsheet spreadsheet = sheetsService.spreadsheets()
                 .get(spreadsheetId)
