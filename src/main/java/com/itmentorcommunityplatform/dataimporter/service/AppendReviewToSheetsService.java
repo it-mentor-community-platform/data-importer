@@ -77,6 +77,12 @@ public class AppendReviewToSheetsService {
         }
     }
 
+    /**
+     * NOTE: this is primarily a fallback for local/test data when firstName is missing.
+     * @param response
+     * @return original name if it's not empty/blank or "-" instead
+     */
+
     private String checkAndCorrectFirstName(ProfileByTelegramDataResponse response) {
         String firstName = response.details().firstName();
         return firstName == null || firstName.isBlank() ? "-" : firstName;
