@@ -27,17 +27,6 @@ public class AppendReviewToSheetsService {
 
     private static final String REVIEW_TYPE = "Заметки";
 
-    /**
-     * addReviewToSheets as it is now (07.10.26) is a temporary decision that solves the problem
-     * when telegramProfileUrl = null (since it's discovered it's nullable)
-     * <p>
-     * see for details:
-     * <a href="https://github.com/it-mentor-community-platform/meta/blob/main/system-analytics/services/
-     * project-service/
-     * index.md#producer-%D0%B4%D0%BB%D1%8F-%D1%82%D0%BE%D0%BF%D0%B8%D0%BA%D0%B0-reviewsreviewcreated">...</a>
-     *
-     * @param reviewCreatedEvent with needed params
-     */
     public void addReviewToSheets(ReviewCreatedEvent reviewCreatedEvent) {
         try {
             String telegramProfileUrl = reviewCreatedEvent.reviewerTelegramProfileUrl();
@@ -52,7 +41,7 @@ public class AppendReviewToSheetsService {
 
                 validateProfileUrl(telegramProfileUrl, response);
 
-                firstName = checkAndCorrectFirstName(response);
+                firstName = getFirstNameOrDefault(response);
                 telegramUri = response.details().telegramUrl();
                 shortTgName = extractTelegramUsername(telegramUri);
             }
@@ -93,14 +82,7 @@ public class AppendReviewToSheetsService {
         }
     }
 
-    /**
-     * NOTE: this is primarily a fallback for local/test data when firstName is missing.
-     *
-     * @param response
-     * @return original name if it's not empty/blank or "-" instead
-     */
-
-    private String checkAndCorrectFirstName(ProfileByTelegramDataResponse response) {
+    private String getFirstNameOrDefault(ProfileByTelegramDataResponse response) {
         String firstName = response.details().firstName();
         return firstName == null || firstName.isBlank() ? "-" : firstName;
     }
