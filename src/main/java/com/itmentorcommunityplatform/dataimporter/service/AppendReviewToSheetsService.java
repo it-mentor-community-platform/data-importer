@@ -27,19 +27,35 @@ public class AppendReviewToSheetsService {
 
     private static final String REVIEW_TYPE = "Заметки";
 
+    /**
+     * addReviewToSheets as it is now (07.10.26) is a temporary decision that solves the problem
+     * when telegramProfileUrl = null (since it's discovered it's nullable)
+     * <p>
+     * see for details:
+     * <a href="https://github.com/it-mentor-community-platform/meta/blob/main/system-analytics/services/
+     * project-service/
+     * index.md#producer-%D0%B4%D0%BB%D1%8F-%D1%82%D0%BE%D0%BF%D0%B8%D0%BA%D0%B0-reviewsreviewcreated">...</a>
+     *
+     * @param reviewCreatedEvent with needed params
+     */
     public void addReviewToSheets(ReviewCreatedEvent reviewCreatedEvent) {
         try {
             String telegramProfileUrl = reviewCreatedEvent.reviewerTelegramProfileUrl();
 
-            ProfileByTelegramDataResponse response
-                    = profileServiceHttpClient.getProfileByTelegramUrl(telegramProfileUrl);
+            String firstName = "-";
+            String telegramUri = "-";
+            String shortTgName = "-";
 
-            validateProfileUrl(telegramProfileUrl, response);
+            if (telegramProfileUrl != null && !telegramProfileUrl.isBlank()) {
+                ProfileByTelegramDataResponse response
+                        = profileServiceHttpClient.getProfileByTelegramUrl(telegramProfileUrl);
 
-            String firstName = checkAndCorrectFirstName(response);
+                validateProfileUrl(telegramProfileUrl, response);
 
-            String telegramUri = response.details().telegramUrl();
-            String shortTgName = extractTelegramUsername(telegramUri);
+                firstName = checkAndCorrectFirstName(response);
+                telegramUri = response.details().telegramUrl();
+                shortTgName = extractTelegramUsername(telegramUri);
+            }
 
             ValueRange valueRange = new ValueRange()
                     .setValues(
@@ -79,6 +95,7 @@ public class AppendReviewToSheetsService {
 
     /**
      * NOTE: this is primarily a fallback for local/test data when firstName is missing.
+     *
      * @param response
      * @return original name if it's not empty/blank or "-" instead
      */
