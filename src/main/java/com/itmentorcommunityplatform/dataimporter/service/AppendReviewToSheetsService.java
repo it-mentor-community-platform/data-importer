@@ -1,6 +1,6 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
-import com.google.api.services.sheets.v4.model.ValueRange;
+import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.event.ReviewCreatedEvent;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByTelegramDataResponse;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ReviewSheets;
@@ -24,6 +24,7 @@ public class AppendReviewToSheetsService {
     private final ReviewSheetsMapper mapper;
     private final GoogleSheetsClient googleSheetsClient;
     private final ProfileServiceHttpClient profileServiceHttpClient;
+    private final DataImporterProperties props;
 
     private static final String REVIEW_TYPE = "Заметки";
 
@@ -32,18 +33,17 @@ public class AppendReviewToSheetsService {
 
         ReviewerData reviewerData = resolveReviewerData(telegramProfileUrl);
 
-        ValueRange valueRange = new ValueRange()
-                .setValues(
-                        buildReviewSheetRow(
-                                reviewCreatedEvent,
-                                REVIEW_TYPE,
-                                reviewerData.firstName(),
-                                reviewerData.shortTgName(),
-                                reviewerData.telegramUri()
-                        )
-                );
-
-        googleSheetsClient.addReviewToSheets(valueRange);
+        googleSheetsClient.addRowsToSheets(
+                props.getProjectSpreadsheetId(),
+                props.getSheetRangeProjectReviews(),
+                buildReviewSheetRow(
+                        reviewCreatedEvent,
+                        REVIEW_TYPE,
+                        reviewerData.firstName(),
+                        reviewerData.shortTgName(),
+                        reviewerData.telegramUri()
+                )
+        );
     }
 
     private record ReviewerData(
@@ -83,7 +83,7 @@ public class AppendReviewToSheetsService {
         return firstName == null || firstName.isBlank() ? "-" : firstName;
     }
 
-    private List<List<Object>> buildReviewSheetRow(
+    private List<List<String>> buildReviewSheetRow(
             ReviewCreatedEvent reviewCreatedEvent,
             String reviewType,
             String authorName,

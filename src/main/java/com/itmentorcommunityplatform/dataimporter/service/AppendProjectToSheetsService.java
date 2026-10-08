@@ -1,6 +1,6 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
-import com.google.api.services.sheets.v4.model.ValueRange;
+import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.event.ProjectCreatedEvent;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProjectSheetsDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
@@ -19,6 +19,7 @@ public class AppendProjectToSheetsService {
 
     private final ProjectSheetsMapper mapper;
     private final GoogleSheetsClient googleSheetsClient;
+    private final DataImporterProperties props;
 
     private static final String HAS_REVIEW_FORMULA = """
             =ЕСЛИ
@@ -27,15 +28,14 @@ public class AppendProjectToSheetsService {
             """;
 
     public void addProjectToSheets(ProjectCreatedEvent projectCreatedEvent) {
-
-        ValueRange valueRange = new ValueRange()
-                .setValues(buildProjectSheetRow(projectCreatedEvent));
-
-        googleSheetsClient.addProjectToSheets(valueRange);
-
+        googleSheetsClient.addRowsToSheets(
+                props.getProjectSpreadsheetId(),
+                props.getSheetRangeProjects(),
+                buildProjectSheetRow(projectCreatedEvent)
+        );
     }
 
-    private List<List<Object>> buildProjectSheetRow(ProjectCreatedEvent projectCreatedEvent) {
+    private List<List<String>> buildProjectSheetRow(ProjectCreatedEvent projectCreatedEvent) {
 
         ProjectSheetsDto projectSheetsDto =
                 mapper.mapToSheetRow(projectCreatedEvent);
