@@ -5,9 +5,11 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:29092
+    consumer:
+      group-id: data-importer-cg
     topic:
       projects-project-created: projects.project.created
-
+      reviews-review-created: reviews.review.created
 
 dataimporter:
   project-spreadsheet-id: "1Ya7J-nsc2m4D9MuiDbauypL7yWocHGoJj9P7tVimxp8"
