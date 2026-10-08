@@ -28,58 +28,54 @@ public class AppendReviewToSheetsService {
     private static final String REVIEW_TYPE = "Заметки";
 
     public void addReviewToSheets(ReviewCreatedEvent reviewCreatedEvent) {
-        try {
-            String telegramProfileUrl = reviewCreatedEvent.reviewerTelegramProfileUrl();
+        String telegramProfileUrl = reviewCreatedEvent.reviewerTelegramProfileUrl();
 
-            String firstName = "-";
-            String telegramUri = "-";
-            String shortTgName = "-";
+        ReviewerData reviewerData = resolveReviewerData(telegramProfileUrl);
 
-            if (telegramProfileUrl != null && !telegramProfileUrl.isBlank()) {
-                ProfileByTelegramDataResponse response
-                        = profileServiceHttpClient.getProfileByTelegramUrl(telegramProfileUrl);
+        ValueRange valueRange = new ValueRange()
+                .setValues(
+                        buildReviewSheetRow(
+                                reviewCreatedEvent,
+                                REVIEW_TYPE,
+                                reviewerData.firstName(),
+                                reviewerData.shortTgName(),
+                                reviewerData.telegramUri()
+                        )
+                );
 
-                validateProfileUrl(telegramProfileUrl, response);
-
-                firstName = getFirstNameOrDefault(response);
-                telegramUri = response.details().telegramUrl();
-                shortTgName = extractTelegramUsername(telegramUri);
-            }
-
-            ValueRange valueRange = new ValueRange()
-                    .setValues(
-                            buildReviewSheetRow(
-                                    reviewCreatedEvent,
-                                    REVIEW_TYPE,
-                                    firstName,
-                                    shortTgName,
-                                    telegramUri
-                            )
-                    );
-
-            googleSheetsClient.addReviewToSheets(valueRange);
-        } catch (IllegalArgumentException illegalArgumentException) {
-            log.error(
-                    "Invalid review author data: reviewUrl={}, reason={}",
-                    reviewCreatedEvent.url(),
-                    illegalArgumentException.getMessage(),
-                    illegalArgumentException
-            );
-
-            throw illegalArgumentException;
-        }
+        googleSheetsClient.addReviewToSheets(valueRange);
     }
 
-    private void validateProfileUrl(String telegramUrl, ProfileByTelegramDataResponse response) {
-        if (response == null
-                || response.details() == null
-                || response.details().telegramUrl() == null
-                || response.details().telegramUrl().isBlank()
-        ) {
-            throw new IllegalArgumentException(
-                    "Profile data not found for Telegram = " + telegramUrl
-            );
+    private record ReviewerData(
+            String firstName,
+            String telegramUri,
+            String shortTgName
+    ) {
+    }
+
+    private ReviewerData resolveReviewerData(String telegramProfileUrl) {
+        String firstName = "-";
+        String telegramUri = "-";
+        String shortTgName = "-";
+
+        if (telegramProfileUrl == null || telegramProfileUrl.isBlank()) {
+            return new ReviewerData(firstName, telegramUri, shortTgName);
         }
+
+        ProfileByTelegramDataResponse response
+                = profileServiceHttpClient.getProfileByTelegramUrl(telegramProfileUrl);
+        if (response == null || response.details() == null) {
+            return new ReviewerData(firstName, telegramUri, shortTgName);
+        }
+
+        firstName = getFirstNameOrDefault(response);
+        String profileTelegramUrl = response.details().telegramUrl();
+
+        if (profileTelegramUrl != null && !profileTelegramUrl.isBlank()) {
+            telegramUri = profileTelegramUrl;
+            shortTgName = extractTelegramUsername(telegramUri);
+        }
+        return new ReviewerData(firstName, telegramUri, shortTgName);
     }
 
     private String getFirstNameOrDefault(ProfileByTelegramDataResponse response) {
