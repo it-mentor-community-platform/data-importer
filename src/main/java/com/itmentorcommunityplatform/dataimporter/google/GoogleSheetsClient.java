@@ -91,21 +91,26 @@ public class GoogleSheetsClient {
         );
     }
 
-    public void addProjectToSheets(ValueRange range) {
-
+    public void addRowsToSheets(
+            String spreadSheetId,
+            String sheetRange,
+            List<List<Object>> data
+    ) {
         try {
+            ValueRange valueRange = new ValueRange().setValues(data);
+
             sheetsService.spreadsheets()
                     .values()
-                    .append(props.getProjectSpreadsheetId(), props.getSheetRangeProjects(), range)
+                    .append(spreadSheetId, sheetRange, valueRange)
                     .setValueInputOption("USER_ENTERED")
                     .execute();
 
-            log.info("[Sheets] The project has been successfully added to the google sheet");
+            log.info("[Sheets] Rows have been successfully added to the google sheet");
 
         } catch (Exception e) {
-            log.error("[Sheets] Failed to append row spreadsheetId={}, range={}, reason={} ",
-                    props.getProjectSpreadsheetId(),
-                    props.getSheetRangeProjects(),
+            log.error("[Sheets] Failed to append rows spreadsheetId={}, range={}, reason={} ",
+                    spreadSheetId,
+                    sheetRange,
                     e.getMessage());
 
             throw new RuntimeException("Failed to append to Google Sheets", e);

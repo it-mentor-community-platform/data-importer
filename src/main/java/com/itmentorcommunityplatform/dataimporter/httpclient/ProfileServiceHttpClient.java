@@ -3,6 +3,7 @@ package com.itmentorcommunityplatform.dataimporter.httpclient;
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubResponseDto;
+import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByTelegramDataResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -85,6 +86,26 @@ public class ProfileServiceHttpClient {
                     .block(Duration.ofSeconds(5));
 
             return response != null ? response.telegramUserId() : null;
+
+        } catch (Exception ex) {
+            log.error("Failed to find profile for telegramUrl={}, error={}", telegramUrl, ex.getMessage());
+            return null;
+        }
+    }
+
+    public ProfileByTelegramDataResponse getProfileByTelegramUrl(String telegramUrl) {
+        String url = UriComponentsBuilder
+                .fromUri(URI.create(props.getProfileServiceBaseUrl()))
+                .path("/api/profile/internal/profile/by-telegram-url")
+                .queryParam("url", telegramUrl)
+                .toUriString();
+
+        try {
+            return webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(ProfileByTelegramDataResponse.class)
+                    .block(Duration.ofSeconds(5));
 
         } catch (Exception ex) {
             log.error("Failed to find profile for telegramUrl={}, error={}", telegramUrl, ex.getMessage());

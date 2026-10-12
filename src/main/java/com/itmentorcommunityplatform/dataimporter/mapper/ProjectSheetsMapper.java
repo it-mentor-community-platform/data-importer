@@ -16,11 +16,26 @@ import java.util.Locale;
 @Mapper(componentModel = "spring")
 public interface ProjectSheetsMapper {
 
-    @Mapping(target = "date", expression = "java(toMonthYear(projectCreatedEvent.getAddedTimestamp()))")
-    @Mapping(target = "githubUserUrl", expression = "java(extractGithubUserUrl(projectCreatedEvent.getGithubRepositoryUrl()))")
-    @Mapping(target = "githubUsername", expression = "java(extractGithubUsername(projectCreatedEvent.getGithubRepositoryUrl()))")
-    @Mapping(target = "repositoryName", expression = "java(extractRepositoryName(projectCreatedEvent.getGithubRepositoryUrl()))")
-    @Mapping(target = "roadmapProject", expression = "java(extractRoadmapProject(projectCreatedEvent.getRoadmapProject()))")
+    @Mapping(
+            target = "date",
+            expression = "java(toMonthYear(projectCreatedEvent.addedTimestamp()))"
+    )
+    @Mapping(
+            target = "githubUserUrl",
+            expression = "java(extractGithubUserUrl(projectCreatedEvent.githubRepositoryUrl()))"
+    )
+    @Mapping(
+            target = "githubUsername",
+            expression = "java(extractGithubUsername(projectCreatedEvent.githubRepositoryUrl()))"
+    )
+    @Mapping(
+            target = "repositoryName",
+            expression = "java(extractRepositoryName(projectCreatedEvent.githubRepositoryUrl()))"
+    )
+    @Mapping(
+            target = "roadmapProject",
+            expression = "java(extractRoadmapProject(projectCreatedEvent.roadmapProject()))"
+    )
     ProjectSheetsDto mapToSheetRow(ProjectCreatedEvent projectCreatedEvent);
 
 

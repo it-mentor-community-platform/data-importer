@@ -1,6 +1,7 @@
-package com.itmentorcommunityplatform.dataimporter.service;
+package com.itmentorcommunityplatform.dataimporter.service.listener;
 
 import com.itmentorcommunityplatform.dataimporter.dto.event.ProjectCreatedEvent;
+import com.itmentorcommunityplatform.dataimporter.service.AppendProjectToSheetsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -17,12 +18,12 @@ public class ProjectEventsListener {
 
     @KafkaListener(
             topics = "${spring.kafka.topic.projects-project-created}",
-            groupId = "data-importer-cg",
+            groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listenProjectCreated(ProjectCreatedEvent event) {
-        if (DATA_IMPORTER_SOURCE.equalsIgnoreCase(event.getProjectSourceType())) {
-            log.debug("Skipping project event from source: {}", event.getProjectSourceType());
+        if (DATA_IMPORTER_SOURCE.equalsIgnoreCase(event.projectSourceType())) {
+            log.debug("Skipping project event from source: {}", event.projectSourceType());
             return;
         }
 

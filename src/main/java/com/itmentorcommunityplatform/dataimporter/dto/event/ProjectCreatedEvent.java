@@ -4,29 +4,27 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-public class ProjectCreatedEvent {
+public record ProjectCreatedEvent(
 
-    @JsonProperty("author_telegram_user_id")
-    private Long authorTelegramUserId;
+        @JsonProperty("author_telegram_user_id")
+        Long authorTelegramUserId,
 
-    @JsonProperty("author_telegram_profile_url")
-    private String authorTelegramProfileUrl;
+        @JsonProperty("author_telegram_profile_url")
+        String authorTelegramProfileUrl,
 
-    @JsonProperty("github_repository_url")
-    private String githubRepositoryUrl;
+        @JsonProperty("github_repository_url")
+        String githubRepositoryUrl,
 
-    @JsonProperty("programming_language")
-    private String programmingLanguage;
+        @JsonProperty("programming_language")
+        String programmingLanguage,
 
-    @JsonProperty("roadmap_project")
-    private String roadmapProject;
+        @JsonProperty("roadmap_project")
+        String roadmapProject,
 
-    @JsonProperty("added_timestamp")
-    private Long addedTimestamp;
+        @JsonProperty("added_timestamp")
+        Long addedTimestamp,
 
-    @JsonProperty("project_source_type")
-    private String projectSourceType;
-
+        @JsonProperty("project_source_type")
+        String projectSourceType
+) {
 }

@@ -24,4 +24,13 @@ public final class TelegramLinkUtil {
         return TELEGRAM_LINK_PREFIX + tgUsername;
     }
 
+    public static @NonNull String extractTelegramUsername(String telegramUrl) {
+        if (telegramUrl == null || telegramUrl.isBlank()) {
+            throw new IllegalArgumentException("telegramUrl must not be blank");
+        }
+
+        String trimmedUrl = telegramUrl.trim();
+
+        return "@" + trimmedUrl.substring(trimmedUrl.lastIndexOf('/') + 1);
+    }
 }
