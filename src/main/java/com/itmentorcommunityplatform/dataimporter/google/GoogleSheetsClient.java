@@ -94,15 +94,10 @@ public class GoogleSheetsClient {
     public void addRowsToSheets(
             String spreadSheetId,
             String sheetRange,
-            List<List<String>> rows
+            List<List<Object>> data
     ) {
         try {
-            List<List<Object>> values = rows.stream()
-                    .map(row -> row.stream().map(value -> (Object) value)
-                            .toList())
-                    .toList();
-
-            ValueRange valueRange = new ValueRange().setValues(values);
+            ValueRange valueRange = new ValueRange().setValues(data);
 
             sheetsService.spreadsheets()
                     .values()

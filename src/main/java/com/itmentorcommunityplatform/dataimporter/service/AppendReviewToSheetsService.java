@@ -83,7 +83,7 @@ public class AppendReviewToSheetsService {
         return firstName == null || firstName.isBlank() ? "-" : firstName;
     }
 
-    private List<List<String>> buildReviewSheetRow(
+    private List<List<Object>> buildReviewSheetRow(
             ReviewCreatedEvent reviewCreatedEvent,
             String reviewType,
             String authorName,

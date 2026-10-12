@@ -35,7 +35,7 @@ public class AppendProjectToSheetsService {
         );
     }
 
-    private List<List<String>> buildProjectSheetRow(ProjectCreatedEvent projectCreatedEvent) {
+    private List<List<Object>> buildProjectSheetRow(ProjectCreatedEvent projectCreatedEvent) {
 
         ProjectSheetsDto projectSheetsDto =
                 mapper.mapToSheetRow(projectCreatedEvent);
