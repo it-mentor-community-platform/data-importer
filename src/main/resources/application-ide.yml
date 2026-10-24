@@ -12,7 +12,7 @@ spring:
       reviews-review-created: reviews.review.created
 
 dataimporter:
-  project-spreadsheet-id: "1Ya7J-nsc2m4D9MuiDbauypL7yWocHGoJj9P7tVimxp8"
+  project-spreadsheet-id: "1Uh_AaSMPbOapt2Tf8YUscKS95RcvewsxBWsnrJGOuO0"
   mentor-spreadsheet-id: "1C0o5aOiUWoRQVOE3l9xmFg-28p06-N_ZzHScXWxz9hw"
   guaranteed-reviews-spreadsheet-id: "1eDvqa_XR7BvMBTVjnIntCP6EDkj9diKhHLE_DS6B3zc"
   auth-service-base-url: "http://localhost:8081"

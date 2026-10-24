@@ -21,12 +21,6 @@ public class AppendProjectToSheetsService {
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties props;
 
-    private static final String HAS_REVIEW_FORMULA = """
-            =ЕСЛИ
-            (СЧЁТЕСЛИ(Reviews!D:D; INDIRECT("E"&ROW()))+
-            СЧЁТЕСЛИ('Спонсируемые ревью'!B:B; INDIRECT("E"&ROW())) > 0; "Есть"; "Нет")
-            """;
-
     public void addProjectToSheets(ProjectCreatedEvent projectCreatedEvent) {
         googleSheetsClient.addRowsToSheets(
                 props.getProjectSpreadsheetId(),
@@ -48,7 +42,8 @@ public class AppendProjectToSheetsService {
                 projectSheetsDto.getGithubRepositoryUrl(),
                 projectSheetsDto.getGithubUsername(),
                 projectSheetsDto.getGithubUserUrl(),
-                HAS_REVIEW_FORMULA
+                props.getHasReviewFormula(),
+                props.getHasSubscriptionFormula()
         ));
     }
 }
