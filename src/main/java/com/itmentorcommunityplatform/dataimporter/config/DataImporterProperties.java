@@ -21,6 +21,9 @@ public class DataImporterProperties {
     private String sheetRangeProjectReviews;
     private String sheetRangeMentors;
 
+    private String hasReviewFormula;
+    private String hasSubscriptionFormula;
+
     private String authServiceBaseUrl;
     private String profileServiceBaseUrl;
     private String projectServiceBaseUrl;
