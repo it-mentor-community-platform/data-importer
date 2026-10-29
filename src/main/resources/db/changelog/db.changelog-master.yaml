@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changesets/001-create-import-type-table.sql
+  - include:
+      file: db/changelog/changesets/002-create-import-execution-table.sql

@@ -11,6 +11,6 @@ CREATE TABLE IF NOT EXISTS import_execution
 
     CONSTRAINT fk_import_execution_import_type
         FOREIGN KEY (type)
-            REFERENCES import_type (code)
+            REFERENCES import_type (id)
             ON DELETE CASCADE
 );

@@ -3,6 +3,12 @@ spring:
     activate:
       on-profile: ide
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/it_mentor_community_platform?currentSchema=data_importer
+    username: root
+    password: password
+    driver-class-name: org.postgresql.Driver
+
   kafka:
     bootstrap-servers: localhost:29092
     consumer:
