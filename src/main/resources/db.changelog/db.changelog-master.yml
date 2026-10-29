@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changesets/001-create-tables.sql
+  - include:
+      file: db/changelog/changesets/002-create-reviews-table.sql

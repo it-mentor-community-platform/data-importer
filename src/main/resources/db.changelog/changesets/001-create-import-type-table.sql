@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS import_type
+(
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(20) NOT NULL
+);
