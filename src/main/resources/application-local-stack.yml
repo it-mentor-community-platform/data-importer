@@ -3,6 +3,12 @@ spring:
     activate:
       on-profile: local-stack
 
+  datasource:
+    url: jdbc:postgresql://database:5432/it_mentor_community_platform?currentSchema=data_importer
+    username: root
+    password: password
+    driver-class-name: org.postgresql.Driver
+
   kafka:
     bootstrap-servers: kafka:9092
     consumer:
