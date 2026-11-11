@@ -4,6 +4,9 @@ import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ProfileUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProfileServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.model.ImportExecution;
+import com.itmentorcommunityplatform.dataimporter.model.ImportType;
+import com.itmentorcommunityplatform.dataimporter.model.SourceReadStatus;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +23,7 @@ import java.util.concurrent.Executors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ProfileImportService {
+public class ProfileImportService implements ImportCommand {
     private final GoogleSheetsClient googleSheetsClient;
     private final ProfileServiceHttpClient httpClient;
     private final DataImporterProperties properties;
@@ -28,32 +31,59 @@ public class ProfileImportService {
     private final Counter profilesImportSuccessCounter;
     private final Counter profilesImportErrorCounter;
     private final Timer profilesImportDurationTimer;
+    private final ImportExecutionService executionService;
 
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "profile-import-thread"));
 
-    public void startImportAsync() {
-        executor.submit(this::doImportMeasured);
+    @Override
+    public ImportType getImportType() {
+        return new ImportType("PROFILES");
     }
 
-    private void doImportMeasured() {
-        profilesImportDurationTimer.record(this::doImport);
-    }
-
-    private void doImport() {
-        log.info("Starting profile import (async)...");
-        try {
-            List<List<Object>> rows = googleSheetsClient.readSheet(properties.getSheetRangeTelegramAccounts());
-            if (rows.isEmpty()) {
-                log.info("Sheet returned empty result.");
-                return;
+    @Override
+    public void startImportAsync(ImportExecution execution) {
+        executor.submit(() -> {
+            try {
+                doImportMeasured(execution);
+            } catch (Exception e) {
+                log.error("Unexpected error in profile import, executionId={}", execution.getId(), e);
             }
+        });
+    }
 
-            Set<String> processedGitHubLinks = new HashSet<>();
-            Set<String> processedTelegramUsernames = new HashSet<>();
-            int processed = 0;
-            int skippedDuplicates = 0;
+    @PreDestroy
+    public void shutdown() {
+        executor.shutdownNow();
+    }
 
+    private void doImportMeasured(ImportExecution execution) {
+        profilesImportDurationTimer.record(() -> doImport(execution));
+    }
+
+    private void doImport(ImportExecution execution) {
+        log.info("Starting profile import (async)...");
+
+        List<List<Object>> rows;
+        try {
+            rows = googleSheetsClient.readSheet(properties.getSheetRangeTelegramAccounts());
+        } catch (Exception e) {
+            log.error("Failed to read profile sheet", e);
+            profilesImportErrorCounter.increment();
+            executionService.finishFailed(execution, 0, 0, SourceReadStatus.FAILED);
+            return;
+        }
+
+        if (rows.isEmpty()) {
+            log.info("Sheet returned empty result.");
+        }
+
+        Set<String> processedGitHubLinks = new HashSet<>();
+        Set<String> processedTelegramUsernames = new HashSet<>();
+        int successCount = 0;
+        int failedCount = 0;
+        int skippedDuplicates = 0;
+        try {
             for (int i = 0; i < rows.size(); i++) {
                 List<Object> row = rows.get(i);
                 if (row == null || row.isEmpty()) {
@@ -69,6 +99,7 @@ public class ProfileImportService {
                     } catch (NumberFormatException ex) {
                         log.warn("Invalid telegram ID '{}' at row index {}, skipping.", tgIdRaw, i);
                         profilesImportErrorCounter.increment();
+                        failedCount++;
                         continue;
                     }
                 }
@@ -106,25 +137,27 @@ public class ProfileImportService {
                 try {
                     httpClient.upsertProfile(requestDto);
                     profilesImportSuccessCounter.increment();
-                    processed++;
+                    successCount++;
                     log.info("Imported profile: githubLink={}, telegramUsernameLink={}",
                             githubLink, formattedTelegramUsernameLink);
                 } catch (Exception ex) {
                     profilesImportErrorCounter.increment();
+                    failedCount++;
                     log.error("Failed to import profile at row index {}: githubLink={}, telegramUsername={}",
                             i, githubLink, formattedTelegramUsernameLink, ex);
                 }
             }
-            log.info("Profile import finished. Total processed: {}. Skipped duplicates: {}", processed, skippedDuplicates);
+
         } catch (Exception e) {
             log.error("Failed to import profiles", e);
             profilesImportErrorCounter.increment();
+            executionService.finishFailed(execution, successCount, failedCount, SourceReadStatus.SUCCESS);
+            return;
         }
-    }
 
-    @PreDestroy
-    public void shutdown() {
-        executor.shutdownNow();
+        executionService.finishSuccessfully(execution, successCount, failedCount);
+        log.info("Profile import finished. Success: {}, failed: {}, skipped duplicates: {}",
+                successCount, failedCount, skippedDuplicates);
     }
 
     private boolean isDuplicateEntry(
@@ -138,5 +171,4 @@ public class ProfileImportService {
 
         return githubDuplicate || usernameDuplicate;
     }
-
 }

@@ -2,7 +2,7 @@ package com.itmentorcommunityplatform.dataimporter.controller;
 
 import com.itmentorcommunityplatform.dataimporter.controller.api.ProfileImportApi;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportStartResponseDto;
-import com.itmentorcommunityplatform.dataimporter.service.ProfileImportService;
+import com.itmentorcommunityplatform.dataimporter.service.ImportService;
 import com.itmentorcommunityplatform.dataimporter.validator.RoleValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,16 +18,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProfileImportController implements ProfileImportApi {
 
-    private final ProfileImportService profileImportService;
+    private final ImportService importService;
 
     @Override
     @PostMapping("/start-profiles-import")
     public ResponseEntity<ImportStartResponseDto> startProfileImport(
             @RequestHeader(value = "X-User-Roles", required = false) List<String> roles
-    ){
+    ) {
         RoleValidator.validateAdminRole(roles);
 
-        profileImportService.startImportAsync();
+        importService.start("PROFILES");
 
         return ResponseEntity.ok(new ImportStartResponseDto("import_started"));
     }
