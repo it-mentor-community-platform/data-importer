@@ -39,3 +39,47 @@ Content-Type: application/json
 X-User-Roles: ADMIN
 
 { "type": "USERS" }
+
+###
+
+# PROFILES type
+
+### 202 - SUCCESS
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+{ "type": "PROFILES" }
+
+### 400 - Unknown type
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+{ "type": "WRONG" }
+
+### 400 - blank type
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+{ "type": "" }
+
+### 400 - body not exist
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+### 403 - forbidden role
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: STUDENT
+
+{ "type": "PROFILES" }
+
+### 409 - already running (run it immediately after 202 SUCCESS)
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+{ "type": "PROFILES" }
