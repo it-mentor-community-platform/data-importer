@@ -1,5 +1,6 @@
 package com.itmentorcommunityplatform.dataimporter.controller;
 
+import com.itmentorcommunityplatform.dataimporter.controller.api.ImportApi;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ImportExecutionStartRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportExecutionResponseDto;
 import com.itmentorcommunityplatform.dataimporter.service.ImportService;
@@ -15,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/data-importer")
 @RequiredArgsConstructor
-public class ImportController {
+public class ImportController implements ImportApi {
     private final ImportService importService;
 
     @PostMapping("/import")
