@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/changesets/001-create-import-type-table.sql
   - include:
       file: db/changelog/changesets/002-create-import-execution-table.sql
+  - include:
+      file: db/changelog/changesets/003-alter-import-execution-nullable.sql
+  - include:
+      file: db/changelog/changesets/004-alter-import-type-unique-code-and-seed.sql
