@@ -52,6 +52,16 @@ public class ImportExecution {
         this.finishedAt = Instant.now().getEpochSecond();
     }
 
+    public void recordSuccess() {
+        ensureNotFinished();
+        this.successCount++;
+    }
+
+    public void recordFailure() {
+        ensureNotFinished();
+        this.errorCount++;
+    }
+
     private void ensureNotFinished() {
         if (finishedAt != null) {
             throw new IllegalStateException(

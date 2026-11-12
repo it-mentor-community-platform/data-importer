@@ -2,7 +2,7 @@ package com.itmentorcommunityplatform.dataimporter.controller;
 
 import com.itmentorcommunityplatform.dataimporter.controller.api.QuestionImportApi;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportStartResponseDto;
-import com.itmentorcommunityplatform.dataimporter.service.QuestionImportService;
+import com.itmentorcommunityplatform.dataimporter.service.ImportService;
 import com.itmentorcommunityplatform.dataimporter.validator.RoleValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,17 +18,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class QuestionImportController implements QuestionImportApi {
 
-    private final QuestionImportService questionImportService;
+    private final ImportService importService;
 
     @Override
     @PostMapping("/start-questions-import")
     public ResponseEntity<ImportStartResponseDto> startQuestionImport(
             @RequestHeader(value = "X-User-Roles", required = false) List<String> roles) {
-
         RoleValidator.validateAdminRole(roles);
-        questionImportService.startImportAsync();
+
+        importService.start("QUESTIONS");
 
         return ResponseEntity.ok(new ImportStartResponseDto("import_started"));
     }
-
 }
