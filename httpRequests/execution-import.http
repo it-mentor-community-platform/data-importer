@@ -173,3 +173,48 @@ Content-Type: application/json
 X-User-Roles: ADMIN
 
 { "type": "PROJECTS" }
+
+###
+
+# REVIEWS type
+# Depends on: Profiles import, Projects import
+
+### 202 - SUCCESS
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+{ "type": "REVIEWS" }
+
+### 400 - Unknown type
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+{ "type": "WRONG" }
+
+### 400 - blank type
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+{ "type": "" }
+
+### 400 - body not exist
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+### 403 - forbidden role
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: STUDENT
+
+{ "type": "REVIEWS" }
+
+### 409 - already running (run it immediately after 202 SUCCESS)
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+{ "type": "REVIEWS" }
