@@ -6,6 +6,9 @@ import com.itmentorcommunityplatform.dataimporter.dto.response.ProfileByGithubRe
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProfileServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProjectServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.model.ImportExecution;
+import com.itmentorcommunityplatform.dataimporter.model.ImportType;
+import com.itmentorcommunityplatform.dataimporter.model.SourceReadStatus;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -26,16 +29,16 @@ import java.util.concurrent.Executors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ProjectImportService {
+public class ProjectImportService implements ImportCommand {
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
     private final ProjectServiceHttpClient projectServiceHttpClient;
     private final ProfileServiceHttpClient profileServiceHttpClient;
 
-
     private final Counter projectImportSuccessCounter;
     private final Counter projectImportErrorCounter;
     private final Timer projectImportDurationTimer;
+    private final ImportExecutionService executionService;
 
     private static final String PROJECT_SOURCE_TYPE = "DATA_IMPORTER";
 
@@ -47,29 +50,56 @@ public class ProjectImportService {
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "project-import-thread"));
 
-    public void startImportAsync() {
-        executor.submit(this::doImportMeasured);
+    @Override
+    public ImportType getImportType() {
+        return new ImportType("PROJECTS");
     }
 
-    private void doImportMeasured() {
-        projectImportDurationTimer.record(this::doImport);
-    }
-
-    private void doImport() {
-        log.info("Starting project import (async)...");
-        try {
-            List<List<Object>> rows = googleSheetsClient.readSheet(properties.getSheetRangeProjects());
-            if (rows.isEmpty()) {
-                log.info("Sheet returned empty result.");
-                return;
+    @Override
+    public void startImportAsync(ImportExecution execution) {
+        executor.submit(() -> {
+            try {
+                doImportMeasured(execution);
+            } catch (Exception e) {
+                log.error("Unexpected error in project import, executionId={}", execution.getId(), e);
             }
+        });
+    }
 
-            Set<String> processedProjects = new HashSet<>();
-            int processed = 0;
-            int skippedDuplicates = 0;
+    @PreDestroy
+    public void shutdown() {
+        executor.shutdownNow();
+    }
 
+    private void doImportMeasured(ImportExecution execution) {
+        projectImportDurationTimer.record(() -> doImport(execution));
+    }
+
+    private void doImport(ImportExecution execution) {
+        log.info("Starting project import (async)...");
+
+        List<List<Object>> rows;
+        try {
+            rows = googleSheetsClient.readSheet(properties.getSheetRangeProjects());
+        } catch (Exception e) {
+            log.error("Failed to read projects sheet", e);
+            projectImportErrorCounter.increment();
+            executionService.finishFailed(execution, 0, 0, SourceReadStatus.FAILED);
+            return;
+        }
+
+        if (rows.isEmpty()) {
+            log.info("Sheet returned empty result.");
+        }
+
+        Set<String> processedProjects = new HashSet<>();
+        int successCount = 0;
+        int failedCount = 0;
+        int skippedDuplicates = 0;
+        try {
             for (int i = 0; i < rows.size(); i++) {
                 List<Object> row = rows.get(i);
+
                 if (row == null || row.isEmpty()) {
                     log.warn("Skipping empty row at index {}", i);
                     continue;
@@ -98,6 +128,8 @@ public class ProjectImportService {
                 if (profile == null || profile.telegramUserId() == null) {
                     log.warn("Profile not found or invalid Telegram User ID for GitHub URL: {} at row {}",
                             githubProfileLink, i);
+                    projectImportErrorCounter.increment();
+                    failedCount++;
                     continue;
                 }
 
@@ -119,21 +151,25 @@ public class ProjectImportService {
                     projectServiceHttpClient.upsertProject(requestDto);
                     processedProjects.add(githubRepositoryLink);
                     projectImportSuccessCounter.increment();
-                    processed++;
+                    successCount++;
                     log.info("Imported project: GitHubRepo={}, GitHubProfile={}, Roadmap project={}",
                             githubRepositoryLink, githubProfileLink, roadmapProject);
                 } catch (Exception ex) {
                     projectImportErrorCounter.increment();
+                    failedCount++;
                     log.error("Failed to import project at row {}: repo={}", i, githubRepositoryLink, ex);
                 }
             }
-            log.info("Project import finished. Total processed: {}. Skipped duplicates: {}",
-                    processed, skippedDuplicates);
-
         } catch (Exception e) {
             log.error("Failed to import projects", e);
             projectImportErrorCounter.increment();
+            executionService.finishFailed(execution, successCount, failedCount, SourceReadStatus.SUCCESS);
+            return;
         }
+
+        executionService.finishSuccessfully(execution, successCount, failedCount);
+        log.info("Project import finished. Success: {}, failed: {}, skipped duplicates: {}",
+                successCount, failedCount, skippedDuplicates);
     }
 
     private String getTelegramUsernameFromUrl(String url) {
@@ -158,10 +194,5 @@ public class ProjectImportService {
             log.warn("Failed to parse date '{}': {}", dateStr, e.getMessage());
             return Instant.now().getEpochSecond();
         }
-    }
-
-    @PreDestroy
-    public void shutdown() {
-        executor.shutdownNow();
     }
 }

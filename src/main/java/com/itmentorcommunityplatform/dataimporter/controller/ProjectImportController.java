@@ -2,7 +2,7 @@ package com.itmentorcommunityplatform.dataimporter.controller;
 
 import com.itmentorcommunityplatform.dataimporter.controller.api.ProjectImportApi;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportStartResponseDto;
-import com.itmentorcommunityplatform.dataimporter.service.ProjectImportService;
+import com.itmentorcommunityplatform.dataimporter.service.ImportService;
 import com.itmentorcommunityplatform.dataimporter.validator.RoleValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ import java.util.List;
 @RequestMapping("/api/data-importer")
 @RequiredArgsConstructor
 public class ProjectImportController implements ProjectImportApi {
-    private final ProjectImportService projectImportService;
+    private final ImportService importService;
 
     @Override
     @PostMapping("/start-projects-import")
@@ -26,7 +26,7 @@ public class ProjectImportController implements ProjectImportApi {
 
         RoleValidator.validateAdminRole(roles);
 
-        projectImportService.startImportAsync();
+        importService.start("PROJECTS");
 
         return ResponseEntity.ok(new ImportStartResponseDto("import_started"));
     }
