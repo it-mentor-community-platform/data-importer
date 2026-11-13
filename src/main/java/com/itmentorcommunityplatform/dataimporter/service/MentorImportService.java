@@ -5,13 +5,14 @@ import com.itmentorcommunityplatform.dataimporter.dto.request.MentorDescriptionD
 import com.itmentorcommunityplatform.dataimporter.dto.request.MentorUpsertRequestDto;
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.MentorServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.model.ImportExecution;
+import com.itmentorcommunityplatform.dataimporter.model.ImportType;
+import com.itmentorcommunityplatform.dataimporter.model.SourceReadStatus;
 import com.itmentorcommunityplatform.dataimporter.util.TelegramLinkUtil;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -23,7 +24,7 @@ import java.util.concurrent.Executors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class MentorImportService {
+public class MentorImportService implements ImportCommand {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
@@ -32,32 +33,58 @@ public class MentorImportService {
     private final Counter mentorImportSuccessCounter;
     private final Counter mentorImportErrorCounter;
     private final Timer mentorImportDurationTimer;
+    private final ImportExecutionService executionService;
 
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "mentor-import-thread"));
 
-    public void startImportAsync() {
-        executor.submit(this::doImportMeasured);
+    @Override
+    public ImportType getImportType() {
+        return new ImportType("MENTORS");
     }
 
-    private void doImportMeasured() {
-        mentorImportDurationTimer.record(this::doImport);
+    @Override
+    public void startImportAsync(ImportExecution execution) {
+        executor.submit(() -> {
+            try {
+                doImportMeasured(execution);
+            } catch (Exception e) {
+                log.error("Unexpected error in mentor import, executionId={}", execution.getId(), e);
+            }
+        });
     }
 
-    private void doImport() {
+    @PreDestroy
+    public void shutdown() {
+        executor.shutdownNow();
+    }
+
+    private void doImportMeasured(ImportExecution execution) {
+        mentorImportDurationTimer.record(() -> doImport(execution));
+    }
+
+    private void doImport(ImportExecution execution) {
         log.info("Starting mentor import (async)...");
 
-        int processed = 0;
 
+        List<List<Object>> rows;
         try {
-            List<List<Object>> rows = googleSheetsClient.readSheet(properties.getMentorSpreadsheetId(),
+            rows = googleSheetsClient.readSheet(properties.getMentorSpreadsheetId(),
                     properties.getSheetRangeMentors());
+        } catch (Exception e) {
+            log.error("Failed to read mentors sheet", e);
+            mentorImportErrorCounter.increment();
+            executionService.finishFailed(execution, 0, 0, SourceReadStatus.FAILED);
+            return;
+        }
 
-            if (rows.isEmpty()) {
-                log.info("Sheet returned empty result.");
-                return;
-            }
+        if (rows.isEmpty()) {
+            log.info("Sheet returned empty result.");
+        }
 
+        int successCount = 0;
+        int failedCount = 0;
+        try {
             for (int i = 0; i < rows.size(); i++) {
                 List<Object> row = rows.get(i);
 
@@ -79,6 +106,7 @@ public class MentorImportService {
                 } catch (NumberFormatException ex) {
                     log.warn("Invalid telegram id '{}' at row index {}, skipping.", tgRaw, i);
                     mentorImportErrorCounter.increment();
+                    failedCount++;
                     continue;
                 }
 
@@ -87,7 +115,7 @@ public class MentorImportService {
 
                     httpClient.insertMentor(mentor);
                     mentorImportSuccessCounter.increment();
-                    processed++;
+                    successCount++;
 
                     log.info("Mentor: telegramId={}, name={}, telegramUrl={}, languages={}, services={}," +
                                     "description={}",
@@ -96,15 +124,19 @@ public class MentorImportService {
 
                 } catch (Exception ex) {
                     mentorImportErrorCounter.increment();
+                    failedCount++;
                     log.error("Failed to import mentor telegramId={}", tgId, ex);
                 }
             }
-            log.info("Mentor import finished. Total processed mentors: {}. Errors: {}",
-                    processed, (long)mentorImportErrorCounter.count());
         } catch (Exception e) {
             log.error("Failed to import mentors", e);
             mentorImportErrorCounter.increment();
+            executionService.finishFailed(execution, successCount, failedCount, SourceReadStatus.SUCCESS);
+            return;
         }
+
+        executionService.finishSuccessfully(execution, successCount, failedCount);
+        log.info("Mentor import finished. Success: {}, failed: {}", successCount, failedCount);
     }
 
     private MentorUpsertRequestDto buildMentorDto(List<Object> row, Long tgId) {
@@ -147,10 +179,5 @@ public class MentorImportService {
                 .map(String::trim)
                 .filter(item -> !item.isEmpty())
                 .toList();
-    }
-
-    @PreDestroy
-    public void shutdown() {
-        executor.shutdownNow();
     }
 }

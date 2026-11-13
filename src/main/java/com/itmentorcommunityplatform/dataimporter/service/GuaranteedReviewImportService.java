@@ -5,7 +5,10 @@ import com.itmentorcommunityplatform.dataimporter.dto.request.GuaranteedReviewRe
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.MentorServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProfileServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.model.ImportExecution;
+import com.itmentorcommunityplatform.dataimporter.model.ImportType;
 import com.itmentorcommunityplatform.dataimporter.model.RoadmapProjectType;
+import com.itmentorcommunityplatform.dataimporter.model.SourceReadStatus;
 import com.itmentorcommunityplatform.dataimporter.util.TelegramLinkUtil;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
@@ -22,7 +25,7 @@ import java.util.concurrent.Executors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class GuaranteedReviewImportService {
+public class GuaranteedReviewImportService implements ImportCommand {
 
     private final GoogleSheetsClient googleSheetsClient;
     private final DataImporterProperties properties;
@@ -32,36 +35,57 @@ public class GuaranteedReviewImportService {
     private final Counter guaranteedReviewImportSuccessCounter;
     private final Counter guaranteedReviewImportErrorCounter;
     private final Timer guaranteedReviewImportDurationTimer;
+    private final ImportExecutionService executionService;
 
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "guaranteed-reviews-import-thread"));
 
-    public void startImportAsync() {
-        executor.submit(this::doImportMeasured);
+    @Override
+    public ImportType getImportType() {
+        return new ImportType("GUARANTEED_REVIEWS");
     }
 
-    private void doImportMeasured() {
-        guaranteedReviewImportDurationTimer.record(this::doImport);
-    }
-
-    private void doImport() {
-        log.info("Starting guaranteed reviews import...");
-        try {
-            List<List<Object>> rows = googleSheetsClient.readSheet(
-                    properties.getGuaranteedReviewsSpreadsheetId(),
-                    properties.getSheetRangeGuaranteedReviews()
-            );
-            if (rows == null || rows.isEmpty()) {
-                log.warn("No data found in the specified range.");
-                return;
+    @Override
+    public void startImportAsync(ImportExecution execution) {
+        executor.submit(() -> {
+            try {
+                doImportMeasured(execution);
+            } catch (Exception e) {
+                log.error("Unexpected error in guaranteed reviews import, executionId={}", execution.getId(), e);
             }
+        });
+    }
 
-            Map<String, Long> mentorIdCache = new HashMap<>();
+    private void doImportMeasured(ImportExecution execution) {
+        guaranteedReviewImportDurationTimer.record(() -> doImport(execution));
+    }
 
-            String currentProjectName = "";
-            int totalImportedCount = 0;
+    private void doImport(ImportExecution execution) {
+        log.info("Starting guaranteed reviews import...");
 
+        List<List<Object>> rows;
+        try {
+            rows = googleSheetsClient.readSheet(
+                    properties.getGuaranteedReviewsSpreadsheetId(),
+                    properties.getSheetRangeGuaranteedReviews());
+        } catch (Exception e) {
+            log.error("Failed to read guaranteed review sheet", e);
+            guaranteedReviewImportErrorCounter.increment();
+            executionService.finishFailed(execution, 0, 0, SourceReadStatus.FAILED);
+            return;
+        }
+
+        if (rows == null || rows.isEmpty()) {
+            log.warn("No data found in the specified range.");
+        }
+
+        Map<String, Long> mentorIdCache = new HashMap<>();
+        String currentProjectName = "";
+        int successCount = 0;
+        int failedCount = 0;
+        try {
             for (List<Object> row : rows) {
+
                 if (row == null || row.isEmpty()) {
                     continue;
                 }
@@ -91,6 +115,7 @@ public class GuaranteedReviewImportService {
                     log.warn("Skip: Mentor with url {} not found in Profile Service", telegramUrl);
                     mentorIdCache.remove(telegramUrl);
                     guaranteedReviewImportErrorCounter.increment();
+                    failedCount++;
                     continue;
                 }
 
@@ -114,19 +139,26 @@ public class GuaranteedReviewImportService {
                                 telegramUrl, cleanLang, projectType, price
                         ), mentorTelegramId);
 
-                        totalImportedCount++;
+                        successCount++;
                         guaranteedReviewImportSuccessCounter.increment();
                     } catch (Exception e) {
                         log.error("Failed to import review for mentor {} (lang: {}): {}",
                                 telegramUrl, cleanLang, e.getMessage());
                         guaranteedReviewImportErrorCounter.increment();
+                        failedCount++;
                     }
                 }
             }
-            log.info("Guaranteed reviews import finished. Total successfully imported: {}", totalImportedCount);
         } catch (Exception e) {
             log.error("Critical error during guaranteed reviews import", e);
+            guaranteedReviewImportErrorCounter.increment();
+            executionService.finishFailed(execution, successCount, failedCount, SourceReadStatus.SUCCESS);
+            return;
         }
+
+        executionService.finishSuccessfully(execution, successCount, failedCount);
+        log.info("Guaranteed reviews import finished.. Success: {}, failed: {}",
+                successCount, failedCount);
     }
 
     private Integer parsePrice(String priceRaw) {

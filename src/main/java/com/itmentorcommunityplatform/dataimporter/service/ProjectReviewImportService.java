@@ -5,6 +5,9 @@ import com.itmentorcommunityplatform.dataimporter.dto.response.ProjectReviewShee
 import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProfileServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProjectServiceHttpClient;
+import com.itmentorcommunityplatform.dataimporter.model.ImportExecution;
+import com.itmentorcommunityplatform.dataimporter.model.ImportType;
+import com.itmentorcommunityplatform.dataimporter.model.SourceReadStatus;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +28,7 @@ import java.util.concurrent.Executors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ProjectReviewImportService {
+public class ProjectReviewImportService implements ImportCommand {
 
     private static final int REVIEW_SHEET_COLUMNS_COUNT = 9;
 
@@ -37,6 +40,7 @@ public class ProjectReviewImportService {
     private final Counter projectReviewImportSuccessCounter;
     private final Counter projectReviewImportErrorCounter;
     private final Timer projectReviewImportDurationTimer;
+    private final ImportExecutionService executionService;
 
     private static final String[] RU_MONTHS = {
             "январь", "февраль", "март", "апрель", "май", "июнь", "июль",
@@ -46,32 +50,54 @@ public class ProjectReviewImportService {
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "project-reviews-import-thread"));
 
-    public void startImportAsync() {
-        executor.submit(this::doImportMeasured);
+    @Override
+    public ImportType getImportType() {
+        return new ImportType("REVIEWS");
     }
 
-    private void doImportMeasured() {
-        projectReviewImportDurationTimer.record(this::doImport);
+    @Override
+    public void startImportAsync(ImportExecution execution) {
+        executor.submit(() -> {
+            try {
+                doImportMeasured(execution);
+            } catch (Exception e) {
+                log.error("Unexpected error in review import, executionId={}", execution.getId(), e);
+            }
+        });
     }
 
-    private void doImport() {
+    @PreDestroy
+    public void shutdown() {
+        executor.shutdownNow();
+    }
+
+    private void doImportMeasured(ImportExecution execution) {
+        projectReviewImportDurationTimer.record(() -> doImport(execution));
+    }
+
+    private void doImport(ImportExecution execution) {
         log.info("Starting project reviews import.");
 
+        List<List<Object>> rows;
         try {
-            List<List<Object>> rows = googleSheetsClient.readSheet(
-                    properties.getSheetRangeProjectReviews()
-            );
+            rows = googleSheetsClient.readSheet(properties.getSheetRangeProjectReviews());
+        } catch (Exception e) {
+            log.error("Failed to read reviews sheet", e);
+            projectReviewImportErrorCounter.increment();
+            executionService.finishFailed(execution, 0, 0, SourceReadStatus.FAILED);
+            return;
+        }
 
-            if (rows.isEmpty()) {
-                log.warn("No project reviews found in the specified range.");
-                return;
-            }
+        if (rows.isEmpty()) {
+            log.warn("No project reviews found in the specified range.");
+        }
 
-            Map<String, Long> mentorIdCache = new HashMap<>();
-
-            int parsed = 0;
-
+        Map<String, Long> mentorIdCache = new HashMap<>();
+        int successCount = 0;
+        int failedCount = 0;
+        try {
             for (List<Object> row : rows) {
+
                 if (row == null || row.size() < REVIEW_SHEET_COLUMNS_COUNT) {
                     log.debug("Skipping service row: {}", row);
                     projectReviewImportErrorCounter.increment();
@@ -92,6 +118,7 @@ public class ProjectReviewImportService {
                     log.warn("Skip: Mentor with url {} not found in Profile Service", reviewerTelegramProfileUrl);
                     mentorIdCache.remove(reviewerTelegramProfileUrl);
                     projectReviewImportErrorCounter.increment();
+                    failedCount++;
                     continue;
                 }
 
@@ -104,25 +131,24 @@ public class ProjectReviewImportService {
                 );
                 try {
                     projectServiceHttpClient.upsertProjectReview(projectReview);
-                    parsed++;
+                    successCount++;
                     log.info("Parsed project review: {}", projectReview);
                     projectReviewImportSuccessCounter.increment();
                 } catch (Exception ex) {
-                    log.error("Failed to import project at row {}: repo={}",
+                    log.error("Failed to import project review at row {}: repo={}",
                             row, projectReview.getProjectGithubRepositoryUrl(), ex);
                     projectReviewImportErrorCounter.increment();
+                    failedCount++;
                 }
             }
-
-            log.info("Project reviews import finished. Total parsed: {}", parsed);
         } catch (Exception e) {
             log.error("Failed to import project reviews", e);
+            executionService.finishFailed(execution, successCount, failedCount, SourceReadStatus.SUCCESS);
+            return;
         }
-    }
 
-    @PreDestroy
-    public void shutdown() {
-        executor.shutdownNow();
+        executionService.finishSuccessfully(execution, successCount, failedCount);
+        log.info("Project reviews import finished. Success: {}, failed: {}", successCount, failedCount);
     }
 
     private String getCell(List<Object> row, int index) {
