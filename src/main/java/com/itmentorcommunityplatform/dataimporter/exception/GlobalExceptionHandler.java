@@ -3,6 +3,7 @@ package com.itmentorcommunityplatform.dataimporter.exception;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ErrorResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -17,8 +18,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
-            Exception ex, Object body, HttpHeaders headers,
-            HttpStatusCode statusCode, WebRequest request) {
+            @NonNull Exception ex, Object body, @NonNull HttpHeaders headers,
+            @NonNull HttpStatusCode statusCode, @NonNull WebRequest request) {
         ResponseEntity<Object> base = super.handleExceptionInternal(ex, body, headers, statusCode, request);
 
         String message = (base != null && base.getBody() instanceof ProblemDetail pd && pd.getDetail() != null)
@@ -31,8 +32,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex, HttpHeaders headers,
-            HttpStatusCode status, WebRequest request) {
+            MethodArgumentNotValidException ex, @NonNull HttpHeaders headers,
+            @NonNull HttpStatusCode status, @NonNull WebRequest request) {
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.joining(", "));
