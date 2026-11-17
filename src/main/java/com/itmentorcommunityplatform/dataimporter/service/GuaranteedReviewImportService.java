@@ -42,7 +42,7 @@ public class GuaranteedReviewImportService implements ImportCommand {
 
     @Override
     public ImportType getImportType() {
-        return new ImportType("GUARANTEED_REVIEWS");
+        return ImportType.GUARANTEED_REVIEWS;
     }
 
     @Override

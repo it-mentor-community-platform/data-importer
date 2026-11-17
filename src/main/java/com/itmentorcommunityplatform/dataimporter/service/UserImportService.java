@@ -39,7 +39,7 @@ public class UserImportService implements ImportCommand {
 
     @Override
     public ImportType getImportType() {
-        return new ImportType("USERS");
+        return ImportType.USERS;
     }
 
     @Override

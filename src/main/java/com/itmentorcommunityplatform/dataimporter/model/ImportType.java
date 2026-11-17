@@ -1,26 +1,27 @@
 package com.itmentorcommunityplatform.dataimporter.model;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import lombok.RequiredArgsConstructor;
 
-
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
-@Table("import_type")
-public class ImportType {
+@RequiredArgsConstructor
+public enum ImportType {
+    USERS(1L),
+    PROFILES(2L),
+    PROJECTS(3L),
+    REVIEWS(4L),
+    MENTORS(5L),
+    GUARANTEED_REVIEWS(6L),
+    QUESTIONS(7L);
 
-    @Id
-    private Long id;
+    private final Long id;
 
-    @EqualsAndHashCode.Include
-    private String code;
-
-    public ImportType(String code) {
-        this.code = code;
+    public static ImportType fromId(long id) {
+        for (ImportType type : values()) {
+            if (type.id == id) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Unknown import type id: %d".formatted(id));
     }
 }

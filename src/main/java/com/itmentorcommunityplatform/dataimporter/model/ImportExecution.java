@@ -2,6 +2,7 @@ package com.itmentorcommunityplatform.dataimporter.model;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.Instant;
@@ -16,7 +17,8 @@ public class ImportExecution {
     @Id
     private Long id;
 
-    private Long typeId;
+    @Column("type_id")
+    private ImportType type;
 
     private ImportExecutionStatus status;
 

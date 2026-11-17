@@ -2,6 +2,7 @@ package com.itmentorcommunityplatform.dataimporter.service;
 
 import com.itmentorcommunityplatform.dataimporter.model.ImportExecution;
 import com.itmentorcommunityplatform.dataimporter.model.ImportExecutionStatus;
+import com.itmentorcommunityplatform.dataimporter.model.ImportType;
 import com.itmentorcommunityplatform.dataimporter.model.SourceReadStatus;
 import com.itmentorcommunityplatform.dataimporter.repository.ImportExecutionRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +16,9 @@ public class ImportExecutionService {
 
     private final ImportExecutionRepository executionRepository;
 
-    public ImportExecution start(Long typeId) {
+    public ImportExecution start(ImportType type) {
         return executionRepository.save(ImportExecution.builder()
-                .typeId(typeId)
+                .type(type)
                 .status(ImportExecutionStatus.RUNNING)
                 .startedAt(Instant.now().getEpochSecond())
                 .build());
@@ -33,7 +34,7 @@ public class ImportExecutionService {
         executionRepository.save(execution);
     }
 
-    public boolean isRunning(Long typeId) {
-        return executionRepository.existsByTypeIdAndStatus(typeId, ImportExecutionStatus.RUNNING);
+    public boolean isRunning(ImportType type) {
+        return executionRepository.existsByTypeAndStatus(type, ImportExecutionStatus.RUNNING);
     }
 }

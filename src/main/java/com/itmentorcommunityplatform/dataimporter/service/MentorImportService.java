@@ -40,7 +40,7 @@ public class MentorImportService implements ImportCommand {
 
     @Override
     public ImportType getImportType() {
-        return new ImportType("MENTORS");
+        return ImportType.MENTORS;
     }
 
     @Override

@@ -40,7 +40,7 @@ public class QuestionImportService implements ImportCommand {
 
     @Override
     public ImportType getImportType() {
-        return new ImportType("QUESTIONS");
+        return ImportType.QUESTIONS;
     }
 
     @Override

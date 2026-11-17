@@ -52,7 +52,7 @@ public class ProjectReviewImportService implements ImportCommand {
 
     @Override
     public ImportType getImportType() {
-        return new ImportType("REVIEWS");
+        return ImportType.REVIEWS;
     }
 
     @Override

@@ -38,7 +38,7 @@ public class ProfileImportService implements ImportCommand {
 
     @Override
     public ImportType getImportType() {
-        return new ImportType("PROFILES");
+        return ImportType.PROFILES;
     }
 
     @Override
