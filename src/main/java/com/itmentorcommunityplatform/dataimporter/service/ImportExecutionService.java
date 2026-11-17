@@ -1,5 +1,6 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
+import com.itmentorcommunityplatform.dataimporter.exception.ImportExecutionNotFoundException;
 import com.itmentorcommunityplatform.dataimporter.model.ImportExecution;
 import com.itmentorcommunityplatform.dataimporter.model.ImportExecutionStatus;
 import com.itmentorcommunityplatform.dataimporter.model.ImportType;
@@ -36,5 +37,10 @@ public class ImportExecutionService {
 
     public boolean isRunning(ImportType type) {
         return executionRepository.existsByTypeAndStatus(type, ImportExecutionStatus.RUNNING);
+    }
+
+    public ImportExecution getRequired(Long id) {
+        return executionRepository.findById(id)
+                .orElseThrow(() -> new ImportExecutionNotFoundException(id));
     }
 }

@@ -3,9 +3,9 @@ package com.itmentorcommunityplatform.dataimporter.controller;
 import com.itmentorcommunityplatform.dataimporter.controller.api.ImportApi;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ImportExecutionStartRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportExecutionResponseDto;
+import com.itmentorcommunityplatform.dataimporter.dto.response.ImportExecutionStatusResponseDto;
 import com.itmentorcommunityplatform.dataimporter.service.ImportService;
 import com.itmentorcommunityplatform.dataimporter.validator.RoleValidator;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +22,7 @@ public class ImportController implements ImportApi {
     @PostMapping("/import")
     public ResponseEntity<ImportExecutionResponseDto> startImport(
             @RequestHeader(value = "X-User-Roles", required = false) List<String> roles,
-            @RequestBody @Valid ImportExecutionStartRequestDto request
+            @RequestBody ImportExecutionStartRequestDto request
     ) {
         RoleValidator.validateAdminRole(roles);
         ImportExecutionResponseDto response = importService.start(request.type());
@@ -30,5 +30,15 @@ public class ImportController implements ImportApi {
         return ResponseEntity.accepted()
                 .location(URI.create("/api/data-importer/imports/".concat(String.valueOf(response.id()))))
                 .body(response);
+    }
+
+    @GetMapping("/imports/{id}")
+    public ResponseEntity<ImportExecutionStatusResponseDto> getImportStatus(
+            @PathVariable("id") Long id,
+            @RequestHeader(value = "X-User-Roles", required = false) List<String> roles
+    ) {
+        RoleValidator.validateAdminRole(roles);
+
+        return ResponseEntity.ok(importService.getStatus(id));
     }
 }

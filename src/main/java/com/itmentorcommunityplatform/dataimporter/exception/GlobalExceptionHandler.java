@@ -69,6 +69,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(new ErrorResponseDto(ex.getMessage()));
     }
 
+    @ExceptionHandler(ImportExecutionNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleImportExecutionNotFound(
+            ImportExecutionNotFoundException ex
+    ) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponseDto(ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleAllUncaughtExceptions(Exception ex) {
         log.error("Unhandled exception occurred: ", ex);

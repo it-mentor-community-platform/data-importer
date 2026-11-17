@@ -3,6 +3,7 @@ package com.itmentorcommunityplatform.dataimporter.controller.api;
 import com.itmentorcommunityplatform.dataimporter.dto.request.ImportExecutionStartRequestDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ErrorResponseDto;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportExecutionResponseDto;
+import com.itmentorcommunityplatform.dataimporter.dto.response.ImportExecutionStatusResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -13,6 +14,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -97,6 +100,96 @@ public interface ImportApi {
                     schema = @Schema(type = "string", example = "ADMIN")
             )
             List<String> roles,
-            ImportExecutionStartRequestDto request
+            @Valid ImportExecutionStartRequestDto request
+    );
+
+    @Operation(
+            summary = "Get import execution status",
+            description = "get the import execution status by id"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Import execution found",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ImportExecutionStatusResponseDto.class),
+                            examples = @ExampleObject(name = "Completed import", value = """
+                                    {
+                                      "id": 125,
+                                      "type": "USERS",
+                                      "status": "SUCCESS",
+                                      "startedAt": 1761834600,
+                                      "finishedAt": 1761834867,
+                                      "successCount": 498,
+                                      "errorCount": 2,
+                                      "sourceReadStatus": "SUCCESS"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "ID must be a positive 64-bit integer",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponseDto.class),
+                            examples = @ExampleObject(
+                                    name = "Negative ID",
+                                    value = "{\"message\": \"Validation failure\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "User has no ADMIN role",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponseDto.class),
+                            examples = @ExampleObject(
+                                    value = "{\"message\": \"Access denied: missing ADMIN role\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Import execution not found",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponseDto.class),
+                            examples = @ExampleObject(
+                                    value = "{\"message\": \"Import execution with id 999999 was not found\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Unexpected error",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponseDto.class),
+                            examples = @ExampleObject(
+                                    value = "{\"message\": \"An unexpected error occurred. Please try again later.\"}"
+                            )
+                    )
+            )
+    })
+    ResponseEntity<ImportExecutionStatusResponseDto> getImportStatus(
+            @Parameter(
+                    name = "id",
+                    in = ParameterIn.PATH,
+                    required = true,
+                    description = "ID of the import execution",
+                    example = "125"
+            )
+            @Positive Long id,
+            @Parameter(
+                    name = "X-User-Roles",
+                    in = ParameterIn.HEADER,
+                    required = true,
+                    description = "The list of user roles. The ADMIN role is required.",
+                    schema = @Schema(type = "string", example = "ADMIN")
+            )
+            List<String> roles
     );
 }

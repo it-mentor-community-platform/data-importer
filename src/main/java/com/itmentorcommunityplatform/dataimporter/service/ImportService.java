@@ -1,6 +1,7 @@
 package com.itmentorcommunityplatform.dataimporter.service;
 
 import com.itmentorcommunityplatform.dataimporter.dto.response.ImportExecutionResponseDto;
+import com.itmentorcommunityplatform.dataimporter.dto.response.ImportExecutionStatusResponseDto;
 import com.itmentorcommunityplatform.dataimporter.exception.ImportAlreadyRunningException;
 import com.itmentorcommunityplatform.dataimporter.exception.ImportNotImplementedException;
 import com.itmentorcommunityplatform.dataimporter.exception.UnknownImportTypeException;
@@ -45,5 +46,22 @@ public class ImportService {
         importCommand.startImportAsync(execution);
 
         return response;
+    }
+
+    public ImportExecutionStatusResponseDto getStatus(Long id) {
+        ImportExecution execution = importExecutionService.getRequired(id);
+
+        ImportType type = execution.getType();
+
+        return new ImportExecutionStatusResponseDto(
+                execution.getId(),
+                type.name(),
+                execution.getStatus(),
+                execution.getStartedAt(),
+                execution.getFinishedAt(),
+                execution.getSuccessCount(),
+                execution.getErrorCount(),
+                execution.getSourceReadStatus()
+        );
     }
 }
