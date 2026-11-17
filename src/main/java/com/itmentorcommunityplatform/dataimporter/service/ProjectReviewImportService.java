@@ -88,8 +88,10 @@ public class ProjectReviewImportService implements ImportCommand {
             return;
         }
 
-        if (rows.isEmpty()) {
+        if (rows == null || rows.isEmpty()) {
             log.warn("No project reviews found in the specified range.");
+            executionService.finishSuccessfully(execution, 0, 0);
+            return;
         }
 
         Map<String, Long> mentorIdCache = new HashMap<>();

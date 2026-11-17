@@ -74,8 +74,10 @@ public class ProfileImportService implements ImportCommand {
             return;
         }
 
-        if (rows.isEmpty()) {
+        if (rows == null || rows.isEmpty()) {
             log.info("Sheet returned empty result.");
+            executionService.finishSuccessfully(execution, 0, 0);
+            return;
         }
 
         Set<String> processedGitHubLinks = new HashSet<>();
