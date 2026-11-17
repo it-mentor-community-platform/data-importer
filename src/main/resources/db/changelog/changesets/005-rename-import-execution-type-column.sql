@@ -1,0 +1,1 @@
+ALTER TABLE import_execution RENAME COLUMN type TO type_id;
