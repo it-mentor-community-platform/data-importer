@@ -1,0 +1,40 @@
+# before running the tests, change the values in the variables to the id with the corresponding statuses in import execution.
+@successId = 1
+@failedId = 2
+@runningId = 3
+@missingId = 999999
+
+### 200 - SUCCESS
+GET http://localhost:8082/api/data-importer/imports/{{successId}}
+X-User-Roles: ADMIN
+
+### 200 - FAILED
+GET http://localhost:8082/api/data-importer/imports/{{failedId}}
+X-User-Roles: ADMIN
+
+### 200 - RUNNING, finishedAt is null
+GET http://localhost:8082/api/data-importer/imports/{{runningId}}
+X-User-Roles: ADMIN
+
+### 400 - negative id
+GET http://localhost:8082/api/data-importer/imports/-1
+X-User-Roles: ADMIN
+
+### 400 - zero id
+GET http://localhost:8082/api/data-importer/imports/0
+X-User-Roles: ADMIN
+
+### 400 - Non-numeric ID
+GET http://localhost:8082/api/data-importer/imports/not-a-number
+X-User-Roles: ADMIN
+
+### 403 - Forbidden role
+GET http://localhost:8082/api/data-importer/imports/{{successId}}
+X-User-Roles: STUDENT
+
+### 403 - Roles header doesn't exist
+GET http://localhost:8082/api/data-importer/imports/{{missingId}}
+
+### 404 - Import execution doesn't exist
+GET http://localhost:8082/api/data-importer/imports/{{missingId}}
+X-User-Roles: ADMIN
