@@ -42,7 +42,7 @@ https://github.com/it-mentor-community-platform/data-importer/issues/4#issuecomm
 
 3. Тестирование
 
-   - Запустить тесты из `user-import-test.http`
+   - Запустить тесты из `httpRequests/execution-import.http` и `httpRequests/execution-get-status-import.http`
 
 
 4. Swagger документация 
