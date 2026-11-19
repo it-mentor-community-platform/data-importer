@@ -2,7 +2,6 @@ package com.itmentorcommunityplatform.dataimporter.service;
 
 import com.itmentorcommunityplatform.dataimporter.config.DataImporterProperties;
 import com.itmentorcommunityplatform.dataimporter.dto.response.ProjectReviewSheetsDto;
-import com.itmentorcommunityplatform.dataimporter.google.GoogleSheetsClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProfileServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.httpclient.ProjectServiceHttpClient;
 import com.itmentorcommunityplatform.dataimporter.model.ImportExecution;
@@ -18,10 +17,7 @@ import javax.annotation.PreDestroy;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,10 +25,13 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 @Slf4j
 public class ProjectReviewImportService implements ImportCommand {
-
+    private static final int PERIOD_COLUMN_INDEX = 0;
+    private static final int REPOSITORY_URL_COLUMN_INDEX = 3;
+    private static final int REVIEW_URL_COLUMN_INDEX = 5;
+    private static final int REVIEWER_PROFILE_URL_COLUMN_INDEX = 8;
     private static final int REVIEW_SHEET_COLUMNS_COUNT = 9;
 
-    private final GoogleSheetsClient googleSheetsClient;
+    private final ImportSheetReader importSheetReader;
     private final DataImporterProperties properties;
     private final ProfileServiceHttpClient profileServiceHttpClient;
     private final ProjectServiceHttpClient projectServiceHttpClient;
@@ -78,79 +77,95 @@ public class ProjectReviewImportService implements ImportCommand {
     private void doImport(ImportExecution execution) {
         log.info("Starting project reviews import.");
 
-        List<List<Object>> rows;
+        List<List<Object>> rows = importSheetReader.readRowsOrFinishImport(
+                execution,
+                properties.getProjectSpreadsheetId(),
+                properties.getSheetRangeProjectReviews(),
+                projectReviewImportErrorCounter
+        );
+        if (rows.isEmpty()) {
+            return;
+        }
+
+        List<ProjectReviewSheetsDto> requests = new ArrayList<>();
+        boolean criticalFailure = false;
+
         try {
-            rows = googleSheetsClient.readSheet(properties.getSheetRangeProjectReviews());
+            prepareRequests(rows, requests, execution);
         } catch (Exception e) {
-            log.error("Failed to read reviews sheet", e);
-            projectReviewImportErrorCounter.increment();
-            executionService.finishFailed(execution, 0, 0, SourceReadStatus.FAILED);
+            log.error("Failed to prepare project review requests", e);
+            criticalFailure = true;
+        }
+
+        try {
+            sendRequests(requests, execution);
+        } catch (Exception e) {
+            log.error("Failed to send project review requests", e);
+            criticalFailure = true;
+        }
+
+        if (criticalFailure) {
+            executionService.finishFailed(execution, execution.getSuccessCount(), execution.getErrorCount(), SourceReadStatus.SUCCESS);
             return;
         }
 
-        if (rows == null || rows.isEmpty()) {
-            log.warn("No project reviews found in the specified range.");
-            executionService.finishSuccessfully(execution, 0, 0);
-            return;
-        }
+        executionService.finishSuccessfully(execution, execution.getSuccessCount(), execution.getErrorCount());
+        log.info("Project reviews import finished. Success: {}, failed: {}", execution.getSuccessCount(), execution.getErrorCount());
+    }
 
+    private void prepareRequests(
+            List<List<Object>> rows, List<ProjectReviewSheetsDto> requests, ImportExecution execution
+    ) {
         Map<String, Long> mentorIdCache = new HashMap<>();
-        int successCount = 0;
-        int failedCount = 0;
-        try {
-            for (List<Object> row : rows) {
 
-                if (row == null || row.size() < REVIEW_SHEET_COLUMNS_COUNT) {
-                    log.debug("Skipping service row: {}", row);
-                    projectReviewImportErrorCounter.increment();
-                    continue;
-                }
-
-                String period = getCell(row, 0);
-                String githubRepositoryUrl = getCell(row, 3);
-                String reviewUrl = getCell(row, 5);
-                String reviewerTelegramProfileUrl = getCell(row, 8);
-
-                Long mentorTelegramId = mentorIdCache.computeIfAbsent(reviewerTelegramProfileUrl, url -> {
-                    log.debug("Cache miss for {}, fetching ID from Profile Service", url);
-                    return profileServiceHttpClient.getTelegramUserIdByUrl(url);
-                });
-
-                if (mentorTelegramId == null) {
-                    log.warn("Skip: Mentor with url {} not found in Profile Service", reviewerTelegramProfileUrl);
-                    mentorIdCache.remove(reviewerTelegramProfileUrl);
-                    projectReviewImportErrorCounter.increment();
-                    failedCount++;
-                    continue;
-                }
-
-                ProjectReviewSheetsDto projectReview = new ProjectReviewSheetsDto(
-                        githubRepositoryUrl,
-                        reviewUrl,
-                        mentorTelegramId,
-                        reviewerTelegramProfileUrl,
-                        parseTimestamp(period)
-                );
-                try {
-                    projectServiceHttpClient.upsertProjectReview(projectReview);
-                    successCount++;
-                    log.info("Parsed project review: {}", projectReview);
-                    projectReviewImportSuccessCounter.increment();
-                } catch (Exception ex) {
-                    log.error("Failed to import project review at row {}: repo={}",
-                            row, projectReview.getProjectGithubRepositoryUrl(), ex);
-                    projectReviewImportErrorCounter.increment();
-                    failedCount++;
-                }
+        for (List<Object> row : rows) {
+            if (row == null || row.size() < REVIEW_SHEET_COLUMNS_COUNT) {
+                log.debug("Skipping service row: {}", row);
+                projectReviewImportErrorCounter.increment();
+                continue;
             }
-        } catch (Exception e) {
-            log.error("Failed to import project reviews", e);
-            executionService.finishFailed(execution, successCount, failedCount, SourceReadStatus.SUCCESS);
-            return;
-        }
 
-        executionService.finishSuccessfully(execution, successCount, failedCount);
-        log.info("Project reviews import finished. Success: {}, failed: {}", successCount, failedCount);
+            String period = getCell(row, PERIOD_COLUMN_INDEX);
+            String githubRepositoryUrl = getCell(row, REPOSITORY_URL_COLUMN_INDEX);
+            String reviewUrl = getCell(row, REVIEW_URL_COLUMN_INDEX);
+            String reviewerProfileUrl = getCell(row, REVIEWER_PROFILE_URL_COLUMN_INDEX);
+
+            Long mentorTelegramId = mentorIdCache.computeIfAbsent(reviewerProfileUrl, url -> {
+                log.debug("Cache miss for {}, fetching ID from Profile Service", url);
+                return profileServiceHttpClient.getTelegramUserIdByUrl(url);
+            });
+
+            if (mentorTelegramId == null) {
+                log.warn("Skip: Mentor with url {} not found in Profile Service", reviewerProfileUrl);
+                projectReviewImportErrorCounter.increment();
+                execution.recordFailure();
+                continue;
+            }
+
+            requests.add(new ProjectReviewSheetsDto(
+                    githubRepositoryUrl,
+                    reviewUrl,
+                    mentorTelegramId,
+                    reviewerProfileUrl,
+                    parseTimestamp(period)
+            ));
+        }
+    }
+
+    private void sendRequests(List<ProjectReviewSheetsDto> requests, ImportExecution execution) {
+        for (ProjectReviewSheetsDto request : requests) {
+            try {
+                projectServiceHttpClient.upsertProjectReview(request);
+                execution.recordSuccess();
+                log.info("Imported project review: {}", request);
+                projectReviewImportSuccessCounter.increment();
+            } catch (Exception e) {
+                log.error("Failed to import project review: repo={}, reviewUrl={}",
+                        request.getProjectGithubRepositoryUrl(), request.getReviewUrl(), e);
+                projectReviewImportErrorCounter.increment();
+                execution.recordFailure();
+            }
+        }
     }
 
     private String getCell(List<Object> row, int index) {
