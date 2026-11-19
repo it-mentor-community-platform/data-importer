@@ -8,6 +8,7 @@ import com.itmentorcommunityplatform.dataimporter.httpclient.ProjectServiceHttpC
 import com.itmentorcommunityplatform.dataimporter.model.ImportExecution;
 import com.itmentorcommunityplatform.dataimporter.model.ImportType;
 import com.itmentorcommunityplatform.dataimporter.model.SourceReadStatus;
+import com.itmentorcommunityplatform.dataimporter.util.SheetMonthTimestampParser;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
-import java.text.DateFormatSymbols;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -43,11 +44,6 @@ public class ProjectImportService implements ImportCommand {
     private final ImportExecutionService executionService;
 
     private static final String PROJECT_SOURCE_TYPE = "DATA_IMPORTER";
-
-    private static final String[] RU_MONTHS = {
-            "январь", "февраль", "март", "апрель", "май", "июнь", "июль",
-            "август", "сентябрь", "октябрь", "ноябрь", "декабрь"
-    };
 
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "project-import-thread"));
@@ -166,7 +162,7 @@ public class ProjectImportService implements ImportCommand {
                     programmingLanguage,
                     roadmapProject,
                     telegramUsername,
-                    parseTimestamp(addedTimestamp),
+                    SheetMonthTimestampParser.parseEpochSeconds(addedTimestamp),
                     PROJECT_SOURCE_TYPE
             ));
         }
@@ -200,24 +196,5 @@ public class ProjectImportService implements ImportCommand {
     private String getTelegramUsernameFromUrl(String url) {
         if (url == null || url.isBlank()) return null;
         return url.substring(url.lastIndexOf('/'));
-    }
-
-    private Long parseTimestamp(String dateStr) {
-        if (dateStr.isEmpty()) return null;
-
-        try {
-            dateStr = dateStr.replace('\u00A0', ' ').trim();
-
-            SimpleDateFormat sdf = new SimpleDateFormat("MMMM, yyyy", Locale.forLanguageTag("ru"));
-            sdf.setDateFormatSymbols(new DateFormatSymbols() {{
-                setMonths(RU_MONTHS);
-            }});
-            return sdf.parse(dateStr)
-                    .toInstant()
-                    .getEpochSecond();
-        } catch (Exception e) {
-            log.warn("Failed to parse date '{}': {}", dateStr, e.getMessage());
-            return Instant.now().getEpochSecond();
-        }
     }
 }

@@ -7,6 +7,7 @@ import com.itmentorcommunityplatform.dataimporter.httpclient.ProjectServiceHttpC
 import com.itmentorcommunityplatform.dataimporter.model.ImportExecution;
 import com.itmentorcommunityplatform.dataimporter.model.ImportType;
 import com.itmentorcommunityplatform.dataimporter.model.SourceReadStatus;
+import com.itmentorcommunityplatform.dataimporter.util.SheetMonthTimestampParser;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
-import java.text.DateFormatSymbols;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -40,11 +41,6 @@ public class ProjectReviewImportService implements ImportCommand {
     private final Counter projectReviewImportErrorCounter;
     private final Timer projectReviewImportDurationTimer;
     private final ImportExecutionService executionService;
-
-    private static final String[] RU_MONTHS = {
-            "январь", "февраль", "март", "апрель", "май", "июнь", "июль",
-            "август", "сентябрь", "октябрь", "ноябрь", "декабрь"
-    };
 
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor(r -> new Thread(r, "project-reviews-import-thread"));
@@ -147,7 +143,7 @@ public class ProjectReviewImportService implements ImportCommand {
                     reviewUrl,
                     mentorTelegramId,
                     reviewerProfileUrl,
-                    parseTimestamp(period)
+                    SheetMonthTimestampParser.parseEpochSeconds(period)
             ));
         }
     }
@@ -174,24 +170,5 @@ public class ProjectReviewImportService implements ImportCommand {
         }
 
         return String.valueOf(row.get(index)).trim();
-    }
-
-    private Long parseTimestamp(String dateStr) {
-        if (dateStr.isEmpty()) return null;
-
-        try {
-            dateStr = dateStr.replace('\u00A0', ' ').trim();
-
-            SimpleDateFormat sdf = new SimpleDateFormat("MMMM, yyyy", Locale.forLanguageTag("ru"));
-            sdf.setDateFormatSymbols(new DateFormatSymbols() {{
-                setMonths(RU_MONTHS);
-            }});
-            return sdf.parse(dateStr)
-                    .toInstant()
-                    .getEpochSecond();
-        } catch (Exception e) {
-            log.warn("Failed to parse date '{}': {}", dateStr, e.getMessage());
-            return Instant.now().getEpochSecond();
-        }
     }
 }
