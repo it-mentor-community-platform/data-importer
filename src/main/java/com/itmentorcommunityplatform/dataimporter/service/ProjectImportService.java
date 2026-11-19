@@ -23,6 +23,8 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.itmentorcommunityplatform.dataimporter.util.SheetCellUtil.readTrimmedCell;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -185,12 +187,6 @@ public class ProjectImportService implements ImportCommand {
                         request.githubRepositoryUrl(), request.authorTelegramUserId(), e);
             }
         }
-    }
-
-    private static String readTrimmedCell(List<Object> row, int columnIndex) {
-        return row.size() > columnIndex
-                ? String.valueOf(row.get(columnIndex)).trim()
-                : "";
     }
 
     private String getTelegramUsernameFromUrl(String url) {

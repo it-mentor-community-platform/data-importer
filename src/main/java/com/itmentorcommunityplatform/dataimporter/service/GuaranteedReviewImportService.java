@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.itmentorcommunityplatform.dataimporter.util.SheetCellUtil.readTrimmedCell;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -189,11 +191,5 @@ public class GuaranteedReviewImportService implements ImportCommand {
         }
         String cleanPrice = priceRaw.replaceAll("[^0-9]", "");
         return cleanPrice.isEmpty() ? 0 : Integer.parseInt(cleanPrice);
-    }
-
-    private static String readTrimmedCell(List<Object> row, int columnIndex) {
-        return row.size() > columnIndex
-                ? String.valueOf(row.get(columnIndex)).trim()
-                : "";
     }
 }
