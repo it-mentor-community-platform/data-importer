@@ -1,38 +1,54 @@
 ### 1. Users import
-POST http://localhost:8082/api/data-importer/start-users-import
+POST http://localhost:8082/api/data-importer/import
 Content-Type: application/json
 X-User-Roles: ADMIN
 
+{ "type": "USERS" }
+
 ### 2. Profiles import
-POST http://localhost:8082/api/data-importer/start-profiles-import
+POST http://localhost:8082/api/data-importer/import
 Content-Type: application/json
 X-User-Roles: ADMIN
+
+{ "type": "PROFILES" }
 
 ### 3. Mentors import
 # Depends on: 2. Profiles import
-POST http://localhost:8082/api/data-importer/start-mentors-import
+POST http://localhost:8082/api/data-importer/import
 Content-Type: application/json
 X-User-Roles: ADMIN
+
+{ "type": "MENTORS" }
 
 ### 4. Project import
 # Depends on: 2. Profiles import
-POST http://localhost:8082/api/data-importer/start-projects-import
+POST http://localhost:8082/api/data-importer/import
 Content-Type: application/json
 X-User-Roles: ADMIN
 
+{ "type": "PROJECTS" }
+
 ### 5. Project-reviews import
 # Depends on: 2. Profiles import
-POST http://localhost:8082/api/data-importer/start-reviews-import
+# Depends on: 4. Project imporеt
+POST http://localhost:8082/api/data-importer/import
 Content-Type: application/json
 X-User-Roles: ADMIN
+
+{ "type": "REVIEWS" }
 
 ### 6. Guranteed-reviews import
 # Depends on: 2. Profiles import
 # Depends on: 3. Mentors import
-POST http://localhost:8082/api/data-importer/start-guaranteed-reviews-import
-X-User-Roles: ADMIN
-
-### 7. Question import
-POST http://localhost:8082/api/data-importer/start-questions-import
+POST http://localhost:8082/api/data-importer/import
 Content-Type: application/json
 X-User-Roles: ADMIN
+
+{ "type": "GUARANTEED_REVIEWS" }
+
+### 7. Question import
+POST http://localhost:8082/api/data-importer/import
+Content-Type: application/json
+X-User-Roles: ADMIN
+
+{ "type": "QUESTIONS" }
